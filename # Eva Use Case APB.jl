@@ -2,11 +2,12 @@
 
 import AlgebraOfGraphics: set_aog_theme!
 
+using Plots
 using CairoMakie
-using DataFrames
+using DataFrames, Distributions
 using EcologicalNetworksDynamics
-using Distributions
 using OrdinaryDiffEq
+using StatsPlots
 
 """
 Compute biomass extrema for each species during the `last` time steps.
@@ -76,6 +77,11 @@ df2 = combine(
     :B_consumer_min => mean,
     :B_consumer_max => mean,
 )
+
+@df df2 Plots.plot(:S, [:B_resource_min_mean, :B_resource_max_mean])
+@df df2 Plots.plot!(:S, [:B_consumer_min_mean, :B_consumer_max_mean], linestyle = "dash")
+
+
 set_aog_theme!() # AlgebraOfGraphics theme.
 c_r = :green # Resource color.
 c_c = :purple # Consumer color.
@@ -97,3 +103,34 @@ Legend(
     tellwidth = false, # Do not adjust width of the orbit diagram.
 )
 # save("/tmp/plot.png", fig; resolution = (450, 350), px_per_unit = 3)
+
+
+
+
+k1 = 0.1 #round(rand(Uniform(0.1, 0.2), 1)[1]; digits = 2)
+k2 = 0.1 #round(rand(Uniform(0.1, 0.2), 1)[1]; digits = 2)
+d = 0.1 #round(rand(Uniform(0.1, 0.4), 1)[1]; digits = 2)
+growthmodel = NutrientIntake(
+    foodweb;
+    supply = s,
+    half_saturation = hcat(k1, k2),
+    turnover = d,
+)
+params =
+    ModelParameters(foodweb; functional_response, producer_growth=growthmodel)
+
+    callback = ExtinctionCallback(1e-6, params, verbose)
+
+B0 = 1 .+ 3 * rand(2) # Inital biomass.
+N0 = 1 .+ 3 * rand(2) # Initial nutrient abundances.
+
+solution = simulate(
+    params,
+    B0;
+    N0,
+    tmax,
+    verbose,
+    alg_hints=[:stiff],
+    callback,
+    reltol=1e-5
+)
