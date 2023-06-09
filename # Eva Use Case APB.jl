@@ -39,6 +39,7 @@ for s in S_values
         k2 = 0.1 #round(rand(Uniform(0.1, 0.2), 1)[1]; digits = 2)
         d = 0.1 #round(rand(Uniform(0.1, 0.4), 1)[1]; digits = 2)
         growthmodel = NutrientIntake(
+            n_nutrients = 3,
             foodweb;
             supply = s,
             half_saturation = hcat(k1, k2),
@@ -78,10 +79,6 @@ df2 = combine(
     :B_consumer_max => mean,
 )
 
-@df df2 Plots.plot(:S, [:B_resource_min_mean, :B_resource_max_mean])
-@df df2 Plots.plot!(:S, [:B_consumer_min_mean, :B_consumer_max_mean], linestyle = "dash")
-
-
 set_aog_theme!() # AlgebraOfGraphics theme.
 c_r = :green # Resource color.
 c_c = :purple # Consumer color.
@@ -104,25 +101,43 @@ Legend(
 )
 # save("/tmp/plot.png", fig; resolution = (450, 350), px_per_unit = 3)
 
+#### bespoke testing -----
 
+# 3 species 
+foodweb = FoodWeb([2 => [1,3]]); # 2 eats 1 and 3
 
+functional_response = ClassicResponse(foodweb; aᵣ = 1, hₜ = 1, h = 1);
 
+S_values = LinRange(0, 70, 20)
+tmax = 10_000 # Simulation length.
+verbose = false # Do not show '@info' messages during the simulation.
+
+# choose an supply rate
+s = S_values[2]
+
+# three resources too
 k1 = 0.1 #round(rand(Uniform(0.1, 0.2), 1)[1]; digits = 2)
 k2 = 0.1 #round(rand(Uniform(0.1, 0.2), 1)[1]; digits = 2)
+k3 = 0.1 #round(rand(Uniform(0.1, 0.2), 1)[1]; digits = 2)
+
 d = 0.1 #round(rand(Uniform(0.1, 0.4), 1)[1]; digits = 2)
+
 growthmodel = NutrientIntake(
     foodweb;
+    n_nutrients = 3,
     supply = s,
-    half_saturation = hcat(k1, k2),
+    half_saturation = [k1 k2 k3; k1 k2 k3],
     turnover = d,
 )
+
+
 params =
     ModelParameters(foodweb; functional_response, producer_growth=growthmodel)
 
-    callback = ExtinctionCallback(1e-6, params, verbose)
+callback = ExtinctionCallback(1e-6, params, verbose)
 
-B0 = 1 .+ 3 * rand(2) # Inital biomass.
-N0 = 1 .+ 3 * rand(2) # Initial nutrient abundances.
+B0 = 1 .+ 3 * rand(3) # Inital biomass.
+N0 = 1 .+ 3 * rand(3) # Initial nutrient abundances.
 
 solution = simulate(
     params,
@@ -134,3 +149,5 @@ solution = simulate(
     callback,
     reltol=1e-5
 )
+
+Plots.plot(solution)
