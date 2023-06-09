@@ -103,7 +103,7 @@ Legend(
 
 #### bespoke testing -----
 
-# 3 species 
+# 3 species
 foodweb = FoodWeb([2 => [1,3]]); # 2 eats 1 and 3
 
 functional_response = ClassicResponse(foodweb; aᵣ = 1, hₜ = 1, h = 1);
@@ -122,6 +122,7 @@ k3 = 0.1 #round(rand(Uniform(0.1, 0.2), 1)[1]; digits = 2)
 
 d = 0.1 #round(rand(Uniform(0.1, 0.4), 1)[1]; digits = 2)
 
+# with growth model - leads to coexistence
 growthmodel = NutrientIntake(
     foodweb;
     n_nutrients = 3,
@@ -133,8 +134,12 @@ growthmodel = NutrientIntake(
 
 params =
     ModelParameters(foodweb; functional_response, producer_growth=growthmodel)
-
 callback = ExtinctionCallback(1e-6, params, verbose)
+
+# no growth model - leads to extinction
+params2 =
+    ModelParameters(foodweb; functional_response)
+
 
 B0 = 1 .+ 3 * rand(3) # Inital biomass.
 N0 = 1 .+ 3 * rand(3) # Initial nutrient abundances.
@@ -150,4 +155,19 @@ solution = simulate(
     reltol=1e-5
 )
 
+solution2 = simulate(
+    params2,
+    B0;
+    N0,
+    tmax,
+    verbose,
+    alg_hints=[:stiff],
+    callback,
+    reltol=1e-5
+)
+
 Plots.plot(solution)
+xlims!(0,100)
+
+Plots.plot(solution2)
+xlims!(0,100)
