@@ -125,9 +125,9 @@ d = 0.1 #round(rand(Uniform(0.1, 0.4), 1)[1]; digits = 2)
 # with growth model - leads to coexistence
 growthmodel = NutrientIntake(
     foodweb;
-    n_nutrients = 3,
+    n_nutrients = 2,
     supply = s,
-    half_saturation = [k1 k2 k3; k1 k2 k3],
+    half_saturation = [k1 k2; k1 k2],
     turnover = d,
 )
 
@@ -140,9 +140,8 @@ callback = ExtinctionCallback(1e-6, params, verbose)
 params2 =
     ModelParameters(foodweb; functional_response)
 
-
 B0 = 1 .+ 3 * rand(3) # Inital biomass.
-N0 = 1 .+ 3 * rand(3) # Initial nutrient abundances.
+N0 = 1 .+ 3 * rand(2) # Initial nutrient abundances.
 
 solution = simulate(
     params,
@@ -166,8 +165,12 @@ solution2 = simulate(
     reltol=1e-5
 )
 
-Plots.plot(solution)
+l = @layout [a b]
+
+p1 =Plots.plot(solution, label = [ "Consumer" "Plant 1" "Plant 2" "R1" "R2";])
 xlims!(0,100)
 
-Plots.plot(solution2)
+p2 = Plots.plot(solution2)
 xlims!(0,100)
+
+Plots.plot(p1, p2, layout = l)
