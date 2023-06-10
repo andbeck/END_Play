@@ -1,12 +1,13 @@
 # Eva Use Case
 
-import AlgebraOfGraphics: set_aog_theme!
+#import AlgebraOfGraphics: set_aog_theme!
+#using CairoMakie
+#using OrdinaryDiffEq
 
 using Plots
-using CairoMakie
 using DataFrames, Distributions
 using EcologicalNetworksDynamics
-using OrdinaryDiffEq
+
 using StatsPlots
 
 """
@@ -104,7 +105,7 @@ Legend(
 #### bespoke testing -----
 
 # 3 species
-foodweb = FoodWeb([2 => [1,3]]); # 2 eats 1 and 3
+foodweb = FoodWeb([3 => [1,2]]); # 3 eats 1 and 2
 
 functional_response = ClassicResponse(foodweb; aᵣ = 1, hₜ = 1, h = 1);
 
@@ -113,9 +114,9 @@ tmax = 10_000 # Simulation length.
 verbose = false # Do not show '@info' messages during the simulation.
 
 # choose an supply rate
-s = S_values[2]
+s = S_values[5]
 
-# three resources too
+# three resources
 k1 = 0.1 #round(rand(Uniform(0.1, 0.2), 1)[1]; digits = 2)
 k2 = 0.1 #round(rand(Uniform(0.1, 0.2), 1)[1]; digits = 2)
 k3 = 0.1 #round(rand(Uniform(0.1, 0.2), 1)[1]; digits = 2)
@@ -167,10 +168,10 @@ solution2 = simulate(
 
 l = @layout [a b]
 
-p1 =Plots.plot(solution, label = [ "Consumer" "Plant 1" "Plant 2" "R1" "R2";])
+p1 =Plots.plot(solution, label = ["Plant 1" "Plant 2" "Consumer" "R1" "R2";])
 xlims!(0,100)
 
-p2 = Plots.plot(solution2)
+p2 = Plots.plot(solution2, label = ["Plant 1" "Plant 2" "Consumer";])
 xlims!(0,100)
 
 Plots.plot(p1, p2, layout = l)
