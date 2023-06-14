@@ -2,6 +2,7 @@
 AlgebraOfGraphics = "cbdf2221-f076-402e-a563-3d30da359d67"
 CairoMakie = "13f3f980-e62b-5c42-98c6-ff1f3baf88f0"
 DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
+DifferentialEquations = "0c46a032-eb83-5123-abaf-570d42b7fbaa"
 Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"
 EcologicalNetworks = "f03a62fe-f8ab-5b77-a061-bb599b765229"
 EcologicalNetworksDynamics = "2fd9189a-c387-4076-88b7-22b33b5a4388"
