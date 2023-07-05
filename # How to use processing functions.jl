@@ -9,7 +9,7 @@ Random.seed!(123)
 
 ## CREATING THE COMMUNITY ----------------
 # Species Richness of the Food Web
-S = 10
+S =20
 
 # Create a Food Web using the Niche Model
 A = FoodWeb(nichemodel, S; C = 0.1)
