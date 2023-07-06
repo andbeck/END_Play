@@ -4,16 +4,11 @@ using EcologicalNetworksDynamics, Plots, Random
 
 Random.seed!(123)
 
-#S = 20
-
-# make a food web
-# richness, connectance and PPMR
-# foodweb = FoodWeb(nichemodel, S; C = 0.1, Z = 10)
-
-# kuramoto food web
+# The kuramoto food web
 foodweb = FoodWeb([4=>(2, 1), 3=>(2, 1)])
 
 # set mortality of consumers and and producer growth rate
+# Kuramoto values
 br = BioRates(foodweb,
     # consumers have death rate
     d = [0, 0, 0.1, 0.1],
@@ -25,16 +20,27 @@ br = BioRates(foodweb,
     x = 0.0,
     y = 0.0)
 
-# define the functional response and parameters
-# set preferences via omega off diagonal
 
-# B = omega value
-# Set to 0 for no consumer coupling (e.g. preference)
-# 0.01 for very asymetric but coupled
-# bigger
 
-B = 0.01
+######## Set Couplings #########
 
+# B = omega value/prefernce/interaction strengths
+# C = interspecific competition
+
+# Settings for Resource Coupling
+C = 0.1 # range from 0 (no plant comp) - 1.2 (inter>intra)
+B = 0 # no consumer coupling - the consumers are specialist
+
+# Settings for Consumer Coupling
+# note small values of B => highly asymetric interaction strength.
+C = 0
+B = 0.01 # range from 0 (no resource coupling) - 0.1 (90:10 ratio)
+
+
+# Set details of Classic FR following Kuramoto
+# hill = 1; ht and attack specific, consumer interference = 0
+# note preference matrix with B value
+# 0 means no coupling by consumer (they are specialists)
 fr = ClassicResponse(foodweb;
     # hill exponent
     h = 1,
@@ -48,12 +54,14 @@ fr = ClassicResponse(foodweb;
     1.0 B 0 0;
     B 1.0 0 0])
 
+
 # set K and producer competition details
-# diag is intraspecific and offdiag is interspecific
+# diag is intraspecific and offdiag is interspecific - defines coupling by resources
 # massive bias to intraspecific == stabilising.
+# start with offdiag = 0.1
 producer_growth_competition = LogisticGrowth(foodweb;
     K = 1,
-    a = (diag = 1, offdiag = 0))
+    a = (diag = 1, offdiag = C))
 
 
 # set up the model
@@ -62,16 +70,20 @@ params = ModelParameters(foodweb;
     functional_response = fr,
     producer_growth = producer_growth_competition)
 
-# define initial biomass
+# define initial biomass (Kuramoto starters)
 B0 = [0.1, 0.3, 0.1, 0.3] # Initial biomass.
 
 # simulate
 solution = simulate(params, B0, tmax = 600)
 
-# find extinctions
-get_extinct_species(solution)
-
 # plot/visualise consumer behaviour
 plot(solution, idxs = [3,4])
 
-coefficient_of_variation(solution, idxs = [3,4])
+# explore synchrony for consumers
+coefficient_of_variation.synchrony(solution, idxs = [3,4])
+
+# explore stability for all
+coefficient_of_variation.stability(solution)
+
+# find extinctions
+#get_extinct_species(solution)
