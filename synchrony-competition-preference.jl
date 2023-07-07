@@ -80,10 +80,7 @@ solution = simulate(params, B0, tmax = 600)
 plot(solution, idxs = [3,4])
 
 # explore synchrony for consumers
-coefficient_of_variation.synchrony(solution, idxs = [3,4])
+coefficient_of_variation(solution, idxs = [3,4]).synchrony
 
-# explore stability for all
-coefficient_of_variation.stability(solution)
-
-# find extinctions
-#get_extinct_species(solution)
+# explore community stability
+coefficient_of_variation(solution).community
