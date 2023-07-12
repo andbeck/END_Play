@@ -5,39 +5,49 @@ using StatsBase
 
 Random.seed!(123)
 
-# make a food web
-fw = FoodWeb([8=>[7,6,5], 7=>[4,3], 6=>[3,1], 5=>[3,2]])
-fw.A
+# define 'no beaver' food web
+initLinks = [8=>[7,6,5], 7=>[4,3], 6=>[3,1], 5=>[3,2]]
+initFW = FoodWeb(initLinks)
 
-trophic_classes(fw)
-
-# we want to insert a an intermediate consumer that preys on
-# 2/3 of the resources but is NOT eaten by a predator
-
-resources = trophic_classes(fw).producers
+# find all the trees
+resources = trophic_classes(initFW).producers
+# select a set of the trees
 whichresources = sample(resources, 3, replace = false)
 
-fw2 = deepcopy(fw)
+# Define what the beaver eats
+# and that it is not eaten
+newLinks = [9=>whichresources]
 
-# the predation matrix
-A = Matrix(fw2.A)
+# combine these new links with the initial links
+invadedLinks = vcat(initLinks, newLinks)
 
-# the new species (eats which resources)
-intSpRow = zeros(Int8, 8)
-intSpRow[whichresources] .= 1
+# create the invaded by beaver food web
+invadedFW = FoodWeb(invadedLinks)
 
-# the new species as a resource (eaten by none)
-intSpCol= zeros(Int8, 9)
+# Look at the matrices if you want
+initFW.A
+invadedFW.A
 
-AA = [A[]]
+# Run the burn-in
+initParams = ModelParameters(initFW)
+initB0 = rand(8)
+initSol = simulate(initParams, initB0)
 
+# set up the invasion biomasses.
+# end of sims biomass for original 8,
+# and mean of these for beaver.
+invadedB0 = vcat(biomass(initSol, last = 1).species,
+            mean(biomass(initSol, last = 1).species))
 
-# build the matrix
-A2 = vcat(A, intSpRow')
-A2 = hcat(A2, intSpCol)
+#
+invadedParams = ModelParameters(invadedFW)
+invadedSol = simulate(invadedParams, invadedB0)
 
-# make it a food web
-fw3 = FoodWeb(A2)
-trophic_classes(fw3)
+plot(initSol, c = :grey50, leg = false,
+        xlims=(0, initSol.t[end]+invadedSol.t[end]))
 
-(A2[1:7,:], A2[9,:], A2[8,:])
+col = fill(:red, 1, 9)
+col[9] = :green
+
+plot!(invadedSol.t .+ initSol.t[end], invadedSol', c = col)
+scatter!([initSol.t[end]], [invadedB0[9]])
