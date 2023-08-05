@@ -13,7 +13,7 @@ n_T, n_K = length(T_range), length(K_range)
 m0 = 0.01
 
 # make 10 food web using niche model and Z value 100
-seed!(22)
+Random.seed!(22)
 FWs = []
 for _ in 1:n_rep
     fw = FoodWeb(nichemodel, 30; C=0.1, Z=100)
@@ -36,7 +36,7 @@ B0[producers(foodweb)] .= K_prod
 B0[1:richness(foodweb) .∉ [producers(foodweb)]] .= K_prod / 8
 
 
-#for i in 1:10
+#for i in 1:2
     TT = T_values[i]
     KK = 1
     K_int = K_int_values[1]
@@ -46,28 +46,29 @@ B0[1:richness(foodweb) .∉ [producers(foodweb)]] .= K_prod / 8
     set_temperature!(p, TT, ExponentialBA(K = exp_ba_carrying_capacity(aₚ = K_int)))
 
     # simulate biomass dynamics for 10 years
-    out = simulate(p, B0 , tmax = 3153600000,
-        callback = EcologicalNetworksDynamics.ExtinctionCallback(1e-12, p, false),
-        adaptive = true,
-        dt = 24*60*60,
-        saveat = 24*60*60,
-        )
+    out = simulate(p, B0 ,tmax = 3153600000,
+    callback = EcologicalNetworksDynamics.ExtinctionCallback(1e-12, p, false),
+    adaptive = true,
+    dt = 24*60*60,
+    saveat = 24*60*60,
+    )
 
-    richness = richness(out)
-    push!(df,step = i, temp = TT, richness = richness)
-
+    # collect deets and write to df
+    rr = richness(out)
+    push!(df, [i, TT, rr])
+    df
     # update Biomass
-    B0 = biomass(out, last = 1)
+    B0 = biomass(out, last = 1).species
 
     # update foodweb
-    fw_updated = deepcopy(foodweb)
     extinctions = get_extinct_species(out)
     whichDel = keys(extinctions)
+    fwA2 = trophic_structure(out).alive_A
 
-    species = 1:size(fw_updated.A,1)
-    species_keep = species .!= whichDel
+    species_keep = 1:length(B0) .!= whichDel
 
-    A_updated = fw_updated.A[species_keep, species_keep]
-    M_updated = fw_updated.M[species_keep]
-
-    p = ModelParameters(fw_updated, functional_response=ClassicResponse(fw_updated, h=1.2), biorates=BioRates(fw_updated; d=0))
+    # Update the food web.... HOW??!!
+    foodweb.A = fwA2
+    foodweb.M[species_keep]
+    p = ModelParameters(foodweb, functional_response=ClassicResponse(foodweb, h=1.2), biorates=BioRates(foodweb; d=0))
+end
