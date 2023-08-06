@@ -103,10 +103,10 @@ sum(sqrt(var_sp)) / sqrt(var_tot)
 
 
 #asynchrony = function(mat) {
-cov_mat <- cov(mat)
-var_sp <- diag(cov_mat)
-var_tot <- sum(cov_mat)
-​sum(sqrt(var_sp)) / sqrt(var_tot)
+#cov_mat <- cov(mat)
+#var_sp <- diag(cov_mat)
+#var_tot <- sum(cov_mat)
+#​sum(sqrt(var_sp)) / sqrt(var_tot)
 #}
 
 function async(solution, last = "50%")

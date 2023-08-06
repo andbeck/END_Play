@@ -36,18 +36,30 @@ B0[producers(foodweb)] .= K_prod
 B0[1:richness(foodweb) .∉ [producers(foodweb)]] .= K_prod / 8
 
 
-#for i in 1:2
+for i in 1:3
+    
+    # make p = p_next for looping over T
+    if i == 1
+        p_next = p;
+        B0 = B0;
+        fw_next = foodweb;
+    else
+        p_next = p_next;
+        B0 = biomass_next;
+        fw_next = A_next;
+    end
+
     TT = T_values[i]
     KK = 1
     K_int = K_int_values[1]
     K_prod = unique(p.producer_growth.K[.!isnothing.(p.producer_growth.K)])
 
     # set temperature
-    set_temperature!(p, TT, ExponentialBA(K = exp_ba_carrying_capacity(aₚ = K_int)))
+    set_temperature!(p_next, TT, ExponentialBA(K = exp_ba_carrying_capacity(aₚ = K_int)))
 
     # simulate biomass dynamics for 10 years
-    out = simulate(p, B0 ,tmax = 3153600000,
-    callback = EcologicalNetworksDynamics.ExtinctionCallback(1e-12, p, false),
+    out = simulate(p_next, B0 ,tmax = 3153600000,
+    callback = EcologicalNetworksDynamics.ExtinctionCallback(1e-12, p_next, false),
     adaptive = true,
     dt = 24*60*60,
     saveat = 24*60*60,
@@ -57,18 +69,30 @@ B0[1:richness(foodweb) .∉ [producers(foodweb)]] .= K_prod / 8
     rr = richness(out)
     push!(df, [i, TT, rr])
     df
-    # update Biomass
-    B0 = biomass(out, last = 1).species
+    
+    # identify extinctions and make mask
+    # figure out how to deal with scenario with NO extinctions when who_extinct is empty
+    who_extinct = keys(get_extinct_species(out))
 
-    # update foodweb
-    extinctions = get_extinct_species(out)
-    whichDel = keys(extinctions)
-    fwA2 = trophic_structure(out).alive_A
+    # a list of 1:n species with 0's in place of extinctions
+    if !isempty(who_extinct)
+        species_mask = 1:size(fw_next.A, 1) .!=who_extinct
+    else
+        species_mask = 1:size(fw_next.A, 1)
+    end
 
-    species_keep = 1:length(B0) .!= whichDel
+    # subset the matrix
+    A_next = fw_next.A[species_mask, species_mask]
+    # S-size(A_next)[1] == length(extinct_1) # a test
+    A_next = FoodWeb(A_next)
+    # subset the bodymasses
+    A_next.M = fw_next.M[species_mask]
+    A_next
 
-    # Update the food web.... HOW??!!
-    foodweb.A = fwA2
-    foodweb.M[species_keep]
-    p = ModelParameters(foodweb, functional_response=ClassicResponse(foodweb, h=1.2), biorates=BioRates(foodweb; d=0))
+    # subset and collect the biomass (last value approach vs. mean?)
+    # whether the mean or the last value is taken doesn't seem to matter
+    biomass_next = biomass(out, last = 1).species[species_mask] 
+
+    # reset the params and bodymass vector with subsetted bodymass
+    p_next = ModelParameters(A_next, functional_response=ClassicResponse(A_next, h=1.2), biorates=BioRates(A_next; d=0))
 end
