@@ -36,15 +36,15 @@ B0[producers(foodweb)] .= K_prod
 B0[1:richness(foodweb) .∉ [producers(foodweb)]] .= K_prod / 8
 
 
-for i in 1:3
-    
+for i in 1:size(T_range,1)
+
     # make p = p_next for looping over T
     if i == 1
         p_next = p;
         B0 = B0;
         fw_next = foodweb;
     else
-        p_next = p_next;
+        #p_next = p_next;
         B0 = biomass_next;
         fw_next = A_next;
     end
@@ -69,30 +69,34 @@ for i in 1:3
     rr = richness(out)
     push!(df, [i, TT, rr])
     df
-    
+
     # identify extinctions and make mask
     # figure out how to deal with scenario with NO extinctions when who_extinct is empty
     who_extinct = keys(get_extinct_species(out))
 
     # a list of 1:n species with 0's in place of extinctions
+    species = 1:size(fw_next.A, 1)
+    #extant = setdiff(species, who_extinct)
     if !isempty(who_extinct)
-        species_mask = 1:size(fw_next.A, 1) .!=who_extinct
+        species_idx = setdiff(species, who_extinct) # or findall(x->x ∉ who_extinct, species)
     else
-        species_mask = 1:size(fw_next.A, 1)
+        species_idx = 1:size(fw_next.A, 1)
     end
 
     # subset the matrix
-    A_next = fw_next.A[species_mask, species_mask]
+    A_next = fw_next.A[species_idx, species_idx]
     # S-size(A_next)[1] == length(extinct_1) # a test
     A_next = FoodWeb(A_next)
     # subset the bodymasses
-    A_next.M = fw_next.M[species_mask]
+    A_next.M = fw_next.M[species_idx]
     A_next
 
     # subset and collect the biomass (last value approach vs. mean?)
     # whether the mean or the last value is taken doesn't seem to matter
-    biomass_next = biomass(out, last = 1).species[species_mask] 
+    biomass_next = biomass(out, last = 1).species[species_idx]
 
     # reset the params and bodymass vector with subsetted bodymass
     p_next = ModelParameters(A_next, functional_response=ClassicResponse(A_next, h=1.2), biorates=BioRates(A_next; d=0))
 end
+
+plot(df[!,:temp] .-273.15, df[!,:richness])
