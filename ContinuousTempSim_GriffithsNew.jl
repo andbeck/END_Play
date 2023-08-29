@@ -1,5 +1,5 @@
 using EcologicalNetworksDynamics
-using Random, DataFrames
+using Random, DataFrames, Plots
 
 # vectors of variables
 T_range = 0:2:40
@@ -24,18 +24,24 @@ end
 
 # dataframe to store results
 n_lines = n_T * n_K * n_rep
-df = DataFrame(step = [], temp=[], richness = [])
+df = DataFrame(step = [], temp=[], richness = [], stability = [], biomass = [])
 
 # start model
+# inital web
 foodweb = FWs[1]
-p = ModelParameters(foodweb, functional_response=ClassicResponse(foodweb, h=1.2), biorates=BioRates(foodweb; d=0))
+
+# initial paramters
+p = ModelParameters(foodweb,
+                    functional_response=ClassicResponse(foodweb, h=1.2),
+                    biorates=BioRates(foodweb; d=0))
+
 # set initial biomasses
 B0 = zeros(richness(foodweb))
 K_prod = unique(p.producer_growth.K[.!isnothing.(p.producer_growth.K)])
 B0[producers(foodweb)] .= K_prod
 B0[1:richness(foodweb) .∉ [producers(foodweb)]] .= K_prod / 8
 
-
+# run model across range of T's
 for i in 1:size(T_range,1)
 
     # make p = p_next for looping over T
@@ -67,8 +73,10 @@ for i in 1:size(T_range,1)
 
     # collect deets and write to df
     rr = richness(out)
-    push!(df, [i, TT, rr])
-    df
+    ss = community_cv(out)
+    bb = biomass(out).total
+    push!(df, [i, TT, rr, ss, bb])
+    #df
 
     # identify extinctions and make mask
     # figure out how to deal with scenario with NO extinctions when who_extinct is empty
@@ -89,7 +97,7 @@ for i in 1:size(T_range,1)
     A_next = FoodWeb(A_next)
     # subset the bodymasses
     A_next.M = fw_next.M[species_idx]
-    A_next
+    #A_next
 
     # subset and collect the biomass (last value approach vs. mean?)
     # whether the mean or the last value is taken doesn't seem to matter
@@ -99,4 +107,10 @@ for i in 1:size(T_range,1)
     p_next = ModelParameters(A_next, functional_response=ClassicResponse(A_next, h=1.2), biorates=BioRates(A_next; d=0))
 end
 
-plot(df[!,:temp] .-273.15, df[!,:richness])
+df
+
+p1 = plot(df[!,:temp] .-273.15, df[!,:richness])
+p2 = plot(df[!,:temp] .-273.15, df[!,:stability])
+p3 = plot(df[!,:temp] .-273.15, df[!,:biomass])
+
+plot(p1, p2, p3)
