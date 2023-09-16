@@ -1,27 +1,65 @@
 using EcologicalNetworksDynamics
-using Random, DataFrames, Plots, CSV
+using Random, DataFrames, Plots, CSV, Distributions
 
 ######################
-# vectors of variables
+# Temp options
 ######################
 
-#T_range = 0:2:40 # temperatures
-T_range = 20:1:40
+# min and max
+T_fix = [20,40]
+
+# linear increase
+T_lin = collect(range(20, 40 , 20)) # 20 temperature steps
+
+# seasonal flip flops
+# need to do this at 20, 30 and 40 with ±1.5 to match T_lin_season
+T_season1 = repeat([19.5, 20.5], 10)
+T_season2 = repeat([30.5, 29.5], 10)
+T_season3 = repeat([40.5, 39.5], 10)
+
+
+# linear with variation
+# consider t versus normal to change frequency of things in tails
+Random.seed!(123)
+d = Normal(1.5,3)
+
+# 10 rvars
+rvars = rand(d, length(T_lin), 10)
+T_lin_var = T_lin .+ rvars
+
+# linear with 'season'
+ll = trunc(Int, length(T_lin)/2)
+# ensure length is correct
+var_season = repeat([1.5, -3], ll)
+
+T_lin_season = collect(T_lin) + var_season
+
+T_lin_season_var = T_lin_season .+ rvars
+
+p1 = plot(1:1:20, T_lin, legend = false,
+    title = "L")
+p2 = plot(1:1:20, [T_season1, T_season2, T_season3],
+    title = "S", legend = false)
+p3 = plot(1:1:20, T_lin_season, legend = false,
+    title = "L+S")
+p4 = plot(1:1:20, T_lin_var, legend = false,
+    title = "L+V")
+p5 = plot(1:1:20, T_lin_season_var, legend = false,
+    title = "L+S+V")
+
+plot(p1, p2, p3, p4, p5, layout = (2,3))
+
+######################
+# K Stuff
+######################
+
 K_range = 1.:1:20 # K valus
 
-# convert T to kelvin for BA
-T_values = 273.15 .+ collect(T_range) # temperature 1-40C
-
-# organis some K thing.s
+# organise some K thing.s
 K_int_values = collect(K_range) # intercept of the carrying capacity (eutrophication)
-<<<<<<< Updated upstream
-#n_T, n_K = length(T_range), length(K_range)
-=======
->>>>>>> Stashed changes
 
 # basal species starting biomass
 m0 = 0.01
-
 
 ######################
 # food webs from niche model
@@ -29,210 +67,126 @@ m0 = 0.01
 
 # make 10 food web using niche model and Z value 100
 Random.seed!(22)
+web_rep = 10 # reps
 FWs = []
-for _ in 1:n_rep
+for _ in 1:web_rep
     fw = FoodWeb(nichemodel, 30; C=0.1, Z=100)
     fw.M *= m0
     push!(FWs, fw)
 end
 
 # n vals for counting
-n_T, n_K = length(T_range), length(K_range)
-n_rep = 10 # reps
+n_T, n_K = 20, 20
 n_web = length(FWs)
 
 # dataframe to store results
-<<<<<<< Updated upstream
-#n_lines = n_T * n_K * n_rep
-df = DataFrame(step=[], temp=[], richness=[], stability=[], biomass=[])
+n_lines = n_web * n_T # 20 temps, 10 webs
 
-# inital web
-#foodweb = FWs[1]
+simTemp = function(webs, tempSeq)
 
-    # declarations
+    # set collection
+    df = DataFrame(fw = [], step = [], temp=[], richness = [], stability = [], biomass = [])
 
-simTemp = function (foodweb, tempRange)
-    
+    # over replicate (10) webs
+    for f in 1:length(webs)
 
+        # start model
+        # inital web
+        foodweb = webs[f]
 
-    # initial paramters
-    p = ModelParameters(foodweb,
-        functional_response=ClassicResponse(foodweb, h=1.2),
-        biorates=BioRates(foodweb; d=0))
+        # initial paramters
+        p = ModelParameters(foodweb,
+                            functional_response=ClassicResponse(foodweb, h=1.2),
+                            biorates=BioRates(foodweb; d=0))
 
-=======
-n_lines = n_web * n_T * n_K * n_rep
-df = DataFrame(fw = [], step = [], temp=[], richness = [], stability = [], biomass = [])
-
-for f in 1:n_web
-
-    # start model
-    # inital web
-    foodweb = FWs[f]
-
-    # initial paramters
-    p = ModelParameters(foodweb,
-                        functional_response=ClassicResponse(foodweb, h=1.2),
-                        biorates=BioRates(foodweb; d=0))
-
->>>>>>> Stashed changes
-    # set initial biomasses
-    B0 = zeros(richness(foodweb))
-    K_prod = unique(p.producer_growth.K[.!isnothing.(p.producer_growth.K)])
-    B0[producers(foodweb)] .= K_prod
-<<<<<<< Updated upstream
-    B0[1:richness(foodweb).∉[producers(foodweb)]] .= K_prod / 8
-
-    # run model across range of T's
-    for i in 1:size(tempRange, 1)
-
-        # make p = p_next for looping over T
-        if i == 1
-            p_next = p
-            B0 = B0
-            fw_next = foodweb
-        else
-            #p_next = p_next;
-            B0 = biomass_next
-            fw_next = A_next
-        end
-
-        TT = tempRange[i]
-        KK = 1
-        K_int = K_int_values[1]
+        # set initial biomasses
+        B0 = zeros(richness(foodweb))
         K_prod = unique(p.producer_growth.K[.!isnothing.(p.producer_growth.K)])
+        B0[producers(foodweb)] .= K_prod
+        B0[1:richness(foodweb) .∉ [producers(foodweb)]] .= K_prod / 8
 
-        # set temperature
-        set_temperature!(p_next, TT, ExponentialBA(K=exp_ba_carrying_capacity(aₚ=K_int)))
+        # run model across range of T's
+        # from specific tempSeq
 
-        # simulate biomass dynamics for 10 years
-        out = simulate(p_next, B0, tmax=3153600000,
-            callback=EcologicalNetworksDynamics.ExtinctionCallback(1e-12, p_next, false),
-            adaptive=true,
-            dt=24 * 60 * 60,
-            saveat=24 * 60 * 60,
-        )
+        for i in 1:size(tempSeq,1)
 
-        # collect deets and write to df
-        rr = richness(out)
-        ss = community_cv(out)
-        bb = biomass(out).total
-        push!(df, [i, TT, rr, ss, bb])
-        #df
+            #################################################
+            ## Organise things for temperature depdendence ##
+            #################################################
 
-        # identify extinctions and make mask
-        # figure out how to deal with scenario with NO extinctions when who_extinct is empty
-        who_extinct = keys(get_extinct_species(out))
+            # define T for time step i
+            TT = tempSeq[i]+273.15 # adjust to Kelvin
 
-        # a list of 1:n species with 0's in place of extinctions
-        species = 1:size(fw_next.A, 1)
-        #extant = setdiff(species, who_extinct)
-        if !isempty(who_extinct)
-            species_idx = setdiff(species, who_extinct) # or findall(x->x ∉ who_extinct, species)
-        else
-            species_idx = 1:size(fw_next.A, 1)
+            # set K vals
+            KK = 1
+            K_int = K_int_values[1]
+            K_prod = unique(p.producer_growth.K[.!isnothing.(p.producer_growth.K)])
+
+            # allocate temperature dependence to rates
+            set_temperature!(p, TT, ExponentialBA(K = exp_ba_carrying_capacity(aₚ = K_int)))
+
+            ## simulate biomass dynamics for 10 years ##
+            out = simulate(p, B0 ,tmax = 3153600000,
+                callback = EcologicalNetworksDynamics.ExtinctionCallback(1e-12, p, false),
+                adaptive = true,
+                dt = 24*60*60,
+                saveat = 24*60*60,
+            )
+
+            ## collect deets and write to df ##
+            rr = richness(out)
+            ss = community_cv(out)
+            bb = biomass(out).total
+            push!(df, [f, i, TT, rr, ss, bb])
+
+            #############################################
+            ### identify extinctions in prep for i+1 ####
+            #############################################
+
+            # who is extinct
+            who_extinct = keys(get_extinct_species(out))
+
+            # a list of 1:n species in current network
+            species = 1:size(foodweb.A, 1)
+            #extant = setdiff(species, who_extinct)
+
+            # mask extinct species or leave as is if who_extinct is empty
+            if !isempty(who_extinct)
+                species_idx = setdiff(species, who_extinct) # or findall(x->x ∉ who_extinct, species)
+            else
+                species_idx = 1:size(foodweb.A, 1)
+            end
+
+            ######################################
+            ## Update foodweb, B0 and p for t+1 ##
+            ######################################
+
+            # subset the matrix
+            foodweb = FoodWeb(foodweb.A[species_idx, species_idx])
+
+            # subset and collect the biomass (last value approach vs. mean?)
+            # whether the mean or the last value is taken doesn't seem to matter
+            B0 = biomass(out, last = 1).species[species_idx]
+
+            # reset the params and bodymass vector with subsetted bodymass
+            p = ModelParameters(foodweb, functional_response=ClassicResponse(foodweb, h=1.2), biorates=BioRates(foodweb; d=0))
         end
-
-        # define biomass vector for next iteration       
-        biomass_next = biomass(out, last=1).species[species_idx]
-
-        # define the food web for the next iteration
-        # subset the matrix
-        A_next = fw_next.A[species_idx, species_idx]
-        # S-size(A_next)[1] == length(extinct_1) # a test
-        A_next = FoodWeb(A_next)
-        
-        # define the bodymass vector for the next iteration
-        A_next.M = fw_next.M[species_idx]
-        #A_next
-
-        # reset the params and bodymass vector with subsetted bodymass
-        p_next = ModelParameters(A_next, functional_response=ClassicResponse(A_next, h=1.2), biorates=BioRates(A_next; d=0))
-
     end
-
-    return df
+    return(df)
 end
 
-outSim = simTemp(FWs[1], T_range)
+################################
+## SIMULATIONS USING FUNCTION ##
+################################
 
-p1 = plot(df[!, :temp] .- 273.15, df[!, :richness])
-p2 = plot(df[!, :temp] .- 273.15, df[!, :stability])
-p3 = plot(df[!, :temp] .- 273.15, df[!, :biomass])
-=======
-    B0[1:richness(foodweb) .∉ [producers(foodweb)]] .= K_prod / 8
+outLin = simTemp(FWs, T_lin)
+outSeason20 = simTemp(FWs, T_season1)
 
-    # run model across range of T's
-    for i in 1:size(T_range,1)
 
-        #################################################
-        ## Organise things for temperature depdendence ##
-        #################################################
+# Send to R Visualisation
+CSV.write("tempLinRun.csv", outLin)
+CSV.write("tempSeasonRun.csv", outSeason)
 
-        # define T for time step i
-        TT = T_values[i]
-
-        # set K vals
-        KK = 1
-        K_int = K_int_values[1]
-        K_prod = unique(p.producer_growth.K[.!isnothing.(p.producer_growth.K)])
-
-        # allocate temperature dependence to rates
-        set_temperature!(p, TT, ExponentialBA(K = exp_ba_carrying_capacity(aₚ = K_int)))
-
-        ## simulate biomass dynamics for 10 years ##
-        out = simulate(p, B0 ,tmax = 3153600000,
-            callback = EcologicalNetworksDynamics.ExtinctionCallback(1e-12, p, false),
-            adaptive = true,
-            dt = 24*60*60,
-            saveat = 24*60*60,
-        )
-
-        ## collect deets and write to df ##
-        rr = richness(out)
-        ss = community_cv(out)
-        bb = biomass(out).total
-        push!(df, [f, i, TT, rr, ss, bb])
-
-        #############################################
-        ### identify extinctions in prep for i+1 ####
-        #############################################
-
-        # who is extinct
-        who_extinct = keys(get_extinct_species(out))
-
-        # a list of 1:n species in current network
-        species = 1:size(foodweb.A, 1)
-        #extant = setdiff(species, who_extinct)
-
-        # mask extinct species or leave as is if who_extinct is empty
-        if !isempty(who_extinct)
-            species_idx = setdiff(species, who_extinct) # or findall(x->x ∉ who_extinct, species)
-        else
-            species_idx = 1:size(foodweb.A, 1)
-        end
-
-        ######################################
-        ## Update foodweb, B0 and p for t+1 ##
-        ######################################
-
-        # subset the matrix
-        foodweb = FoodWeb(foodweb.A[species_idx, species_idx])
-
-        # subset and collect the biomass (last value approach vs. mean?)
-        # whether the mean or the last value is taken doesn't seem to matter
-        B0 = biomass(out, last = 1).species[species_idx]
-
-        # reset the params and bodymass vector with subsetted bodymass
-        p = ModelParameters(foodweb, functional_response=ClassicResponse(foodweb, h=1.2), biorates=BioRates(foodweb; d=0))
-    end
-end
-
-# Visualisation
-df
-CSV.write("tempRun.csv", df)
-
->>>>>>> Stashed changes
 
 # p1 = plot(df[!,:temp] .-273.15, df[!,:richness])
 # ylabel!("Richness")
