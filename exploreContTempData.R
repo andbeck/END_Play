@@ -32,6 +32,12 @@ LinSeason <- read_csv("tempLinSeason.csv") %>%
   mutate(fw = factor(fw)) %>% 
   mutate(temp = temp - 273.15)
 
+# Lin + Variation
+LinVar <- read_csv("tempLinVar.csv") %>% 
+  mutate(fw = factor(fw)) %>% 
+  mutate(temp = temp - 273.15) %>% 
+  mutate(replicate = rep(1:10, each = 200))
+
 # Combine
 df <- bind_rows(Lin, Season20, Season30, Season40, LinSeason) %>% 
   mutate(tempSeq = rep(c("Lin",

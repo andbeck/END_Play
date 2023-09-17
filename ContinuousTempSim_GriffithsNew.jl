@@ -191,10 +191,11 @@ out40 = simTemp(FWs, T_fix40)
 #Linear with Variation (reps)
 df_vector_LV = Any[]
 for i in 1:size(T_lin_var, 2)
-    push!(df_vector_LV, simTemp(FWs, T_lin_var))
+    push!(df_vector_LV, simTemp(FWs, T_lin_var[:,i]))
 end
 
-map(+, df_vector_LV)
+df_LV = reduce(vcat,df_vector_LV)
+CSV.write("tempLinVar.csv", df_LV)
 
 #Linear with Season and Variation (reps)
 df_vector_LVS = Any[]
