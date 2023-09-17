@@ -194,13 +194,11 @@ for i in 1:size(T_lin_var, 2)
     push!(df_vector_LV, simTemp(FWs, T_lin_var[:,i]))
 end
 
-df_LV = reduce(vcat,df_vector_LV)
-CSV.write("tempLinVar.csv", df_LV)
 
 #Linear with Season and Variation (reps)
 df_vector_LVS = Any[]
 for i in 1:size(T_lin_season_var, 2)
-    push!(df_vector_LVS, simTemp(FWs, T_lin_season_var))
+    push!(df_vector_LVS, simTemp(FWs, T_lin_season_var[:,i]))
 end
 
 # Send to R Visualisation
@@ -211,6 +209,10 @@ CSV.write("tempSeason40.csv", outSeason40)
 CSV.write("tempLinSeason.csv", outLinSeason)
 CSV.write("temp20Cons", out20)
 CSV.write("temp40Cons", out40)
+df_LV = reduce(vcat,df_vector_LV)
+CSV.write("tempLinVar.csv", df_LV)
+df_LV = reduce(vcat,df_vector_LVS)
+CSV.write("tempLinVarSeason.csv", df_LVS)
 
 
 # p1 = plot(df[!,:temp] .-273.15, df[!,:richness])

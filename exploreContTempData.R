@@ -1,7 +1,9 @@
 library(tidyverse)
 library(patchwork)
 
-# reference 20/40
+# Data Sets ----------------------------------------
+
+## reference 20/40 ----
 fix20 <- read_csv("temp20Cons") %>% 
   mutate(fw = factor(fw)) %>% 
   mutate(temp = temp - 273.15)
@@ -9,12 +11,13 @@ fix40 <- read_csv("temp40Cons") %>%
   mutate(fw = factor(fw)) %>% 
   mutate(temp = temp - 273.15)
 
-# Lin is linear change
+## Lin is linear change ----
 Lin <- read_csv("tempLinRun.csv") %>% 
   mutate(fw = factor(fw)) %>% 
   mutate(temp = temp - 273.15)
 
-# Seasonal change at 20, 30, 40
+## Seasonal change at 20, 30, 40 ----
+
 Season20 <- read_csv("tempSeason20.csv") %>% 
   mutate(fw = factor(fw)) %>% 
   mutate(temp = temp - 273.15)
@@ -27,29 +30,35 @@ Season40 <- read_csv("tempSeason30.csv") %>%
   mutate(fw = factor(fw)) %>% 
   mutate(temp = temp - 273.15)
 
-# Season + Linear
+## Season + Linear ----
+
 LinSeason <- read_csv("tempLinSeason.csv") %>% 
   mutate(fw = factor(fw)) %>% 
   mutate(temp = temp - 273.15)
 
-# Lin + Variation
+## Lin + Variation ----
+
 LinVar <- read_csv("tempLinVar.csv") %>% 
   mutate(fw = factor(fw)) %>% 
   mutate(temp = temp - 273.15) %>% 
   mutate(replicate = rep(1:10, each = 200))
 
-# Combine
+## Combine all without variation ----
+
 df <- bind_rows(Lin, Season20, Season30, Season40, LinSeason) %>% 
   mutate(tempSeq = rep(c("Lin",
                          "Season20", "Season30", "Season40",
                          "LinSeason"), 
                        each = 200))
 
-# summarise
+# summarise ------------------------------------------
+
 # note use of step rather than temperature as x-axis
 # for linear it is 20 -> 40
 # for season it is 21.5 -> 19.5 repeated for 10 cycles
 
+
+## summarise all with non var to mean from among n networks ----
 sumT <- df %>% 
   group_by(tempSeq, step) %>% 
   summarise(
@@ -59,14 +68,15 @@ sumT <- df %>%
     seBiomass = 1.96*(sd(biomass)/sqrt(n()))
   )
 
+## summarise random var data to have single mean among 10 webs per random run ----
 sumT_vars <- LinVar %>% 
   group_by(replicate, step) %>% 
   summarise(meanRichness = mean(richness),
             meanBiomass = mean(biomass))
 
-# plots, faceted by tempSeq type.
+# plots, faceted by tempSeq type. -------------------------------
 
-# reference
+## reference plot ----
 ref_df <- bind_rows(fix20, fix40) %>% 
   mutate(fixedTemp = rep(c(20,40), each = 10)) # nwebs
 p1 <- ggplot(ref_df, aes(x = factor(temp), y = richness, fill = factor(temp)))+
@@ -83,6 +93,8 @@ p2 <- ggplot(ref_df, aes(x = factor(temp), y = biomass, fill = factor(temp)))+
 
 p1+p2
 
+## reference data to annotate sequence plots ----
+
 sumRef <- ref_df %>% 
   group_by(temp) %>% 
   summarise(
@@ -90,7 +102,7 @@ sumRef <- ref_df %>%
     meanBiomass = mean(biomass)
   )
 
-# treatments
+# temperature sequeucen treatment plots ----
 
 p3 <- ggplot(df, aes(x = step, y = richness, col = fw))+
   geom_point()+
@@ -129,6 +141,7 @@ p4 <- ggplot(df, aes(x = step, y = biomass, col = fw))+
 
 p4+p2
 
+## Temp Seq Plots with stoch, so each line is a unique set of randomness ----
 
 p5 <- ggplot(sumT_vars, aes(x = step, y = meanBiomass, colour = factor(replicate)))+
   geom_line()+
