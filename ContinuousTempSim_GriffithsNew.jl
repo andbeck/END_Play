@@ -1,6 +1,8 @@
 using EcologicalNetworksDynamics
 using Random, DataFrames, Plots, CSV, Distributions
 
+## TO DO: check that 20c for reference == 20c first time step for all others.
+
 ######################
 # Temp options
 ######################
