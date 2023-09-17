@@ -59,6 +59,11 @@ sumT <- df %>%
     seBiomass = 1.96*(sd(biomass)/sqrt(n()))
   )
 
+sumT_vars <- LinVar %>% 
+  group_by(replicate, step) %>% 
+  summarise(meanRichness = mean(richness),
+            meanBiomass = mean(biomass))
+
 # plots, faceted by tempSeq type.
 
 # reference
@@ -125,4 +130,14 @@ p4 <- ggplot(df, aes(x = step, y = biomass, col = fw))+
 p4+p2
 
 
+p5 <- ggplot(sumT_vars, aes(x = step, y = meanBiomass, colour = factor(replicate)))+
+  geom_line()+
+  theme_bw()+
+  theme(legend.position = "none")
 
+p6 <- ggplot(sumT_vars, aes(x = step, y = meanRichness, colour = factor(replicate)))+
+  geom_line()+
+  theme_bw()+
+  theme(legend.position = "none")
+
+p5+p6
