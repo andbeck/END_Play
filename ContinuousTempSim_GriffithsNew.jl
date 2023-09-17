@@ -6,7 +6,8 @@ using Random, DataFrames, Plots, CSV, Distributions
 ######################
 
 # min and max
-T_fix = [20,40]
+T_fix20 = 20
+T_fix40 = 40
 
 # linear increase
 T_lin = collect(range(20, 40 , 20)) # 20 temperature steps
@@ -181,11 +182,34 @@ end
 
 outLin = simTemp(FWs, T_lin)
 outSeason20 = simTemp(FWs, T_season1)
+outSeason30 = simTemp(FWs, T_season2)
+outSeason40 = simTemp(FWs, T_season3)
+outLinSeason = simTemp(FWs, T_lin_season)
+out20 = simTemp(FWs, T_fix20)
+out40 = simTemp(FWs, T_fix40)
 
+#Linear with Variation (reps)
+df_vector_LV = Any[]
+for i in 1:size(T_lin_var, 2)
+    push!(df_vector_LV, simTemp(FWs, T_lin_var))
+end
+
+map(+, df_vector_LV)
+
+#Linear with Season and Variation (reps)
+df_vector_LVS = Any[]
+for i in 1:size(T_lin_season_var, 2)
+    push!(df_vector_LVS, simTemp(FWs, T_lin_season_var))
+end
 
 # Send to R Visualisation
 CSV.write("tempLinRun.csv", outLin)
-CSV.write("tempSeasonRun.csv", outSeason)
+CSV.write("tempSeason20.csv", outSeason20)
+CSV.write("tempSeason30.csv", outSeason30)
+CSV.write("tempSeason40.csv", outSeason40)
+CSV.write("tempLinSeason.csv", outLinSeason)
+CSV.write("temp20Cons", out20)
+CSV.write("temp40Cons", out40)
 
 
 # p1 = plot(df[!,:temp] .-273.15, df[!,:richness])
