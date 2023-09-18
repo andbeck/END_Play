@@ -43,6 +43,13 @@ LinVar <- read_csv("tempLinVar.csv") %>%
   mutate(temp = temp - 273.15) %>% 
   mutate(replicate = rep(1:10, each = 200))
 
+## Lin + Season + Variation ----
+
+LinVarSeason <- read_csv("tempLinVarSeason.csv") %>% 
+  mutate(fw = factor(fw)) %>% 
+  mutate(temp = temp - 273.15) %>% 
+  mutate(replicate = rep(1:10, each = 200))
+
 ## Combine all without variation ----
 
 df <- bind_rows(Lin, Season20, Season30, Season40, LinSeason) %>% 
@@ -74,18 +81,25 @@ sumT_vars <- LinVar %>%
   summarise(meanRichness = mean(richness),
             meanBiomass = mean(biomass))
 
+## summarise random var+Season data to have single mean among 10 webs per random run ----
+sumT_varsSeason <- LinVarSeason %>% 
+  group_by(replicate, step) %>% 
+  summarise(meanRichness = mean(richness),
+            meanBiomass = mean(biomass))
+
 # plots, faceted by tempSeq type. -------------------------------
 
 ## reference plot ----
 ref_df <- bind_rows(fix20, fix40) %>% 
   mutate(fixedTemp = rep(c(20,40), each = 10)) # nwebs
-p1 <- ggplot(ref_df, aes(x = factor(temp), y = richness, fill = factor(temp)))+
+
+p1 <- ggplot(ref_df, aes(x = factor(temp), y = biomass, fill = factor(temp)))+
   geom_boxplot()+
   scale_fill_manual(values = c("20" = "blue", "40" = "red"))+
   theme_bw()+
   theme(legend.position = "none")
 
-p2 <- ggplot(ref_df, aes(x = factor(temp), y = biomass, fill = factor(temp)))+
+p2 <- ggplot(ref_df, aes(x = factor(temp), y = richness, fill = factor(temp)))+
   geom_boxplot()+
   scale_fill_manual(values = c("20" = "blue", "40" = "red"))+
   theme_bw()+
@@ -104,7 +118,24 @@ sumRef <- ref_df %>%
 
 # temperature sequeucen treatment plots ----
 
-p3 <- ggplot(df, aes(x = step, y = richness, col = fw))+
+p3 <- ggplot(df, aes(x = step, y = biomass, col = fw))+
+  geom_point()+
+  geom_line()+
+  geom_line(data = sumT, aes(x = step, y = meanBiomass), col = "black")+
+  geom_ribbon(data = sumT, aes(x = step, y = meanBiomass,
+                               ymax = meanBiomass+seBiomass,
+                               ymin = meanBiomass-seBiomass), col = "grey80", alpha = 0.5)+
+  # add constant (single temp) means
+  # need to adjust just these colours
+  geom_point(data = sumRef, aes(x = 20, y = meanBiomass, col = factor(meanBiomass)), size = 5)+
+  geom_hline(data = sumRef, aes(yintercept = meanBiomass), linetype = 'dashed')+
+  facet_wrap(~ tempSeq)+
+  theme_bw()+
+  theme(legend.position = "none")
+
+p3+p1
+
+p4 <- ggplot(df, aes(x = step, y = richness, col = fw))+
   geom_point()+
   geom_line()+
   # add mean + CI ribbon
@@ -122,24 +153,7 @@ p3 <- ggplot(df, aes(x = step, y = richness, col = fw))+
   theme_bw()+
   theme(legend.position = "none")
 
-p3+p1
-
-p4 <- ggplot(df, aes(x = step, y = biomass, col = fw))+
-  geom_point()+
-  geom_line()+
-  geom_line(data = sumT, aes(x = step, y = meanBiomass), col = "black")+
-  geom_ribbon(data = sumT, aes(x = step, y = meanBiomass,
-                               ymax = meanBiomass+seBiomass,
-                               ymin = meanBiomass-seBiomass), col = "grey80", alpha = 0.5)+
-  # add constant (single temp) means
-  # need to adjust just these colours
-  geom_point(data = sumRef, aes(x = 20, y = meanBiomass, col = factor(meanBiomass)), size = 5)+
-  geom_hline(data = sumRef, aes(yintercept = meanBiomass), linetype = 'dashed')+
-  facet_wrap(~ tempSeq)+
-  theme_bw()+
-  theme(legend.position = "none")
-
-p4+p2
+p4+p1
 
 ## Temp Seq Plots with stoch, so each line is a unique set of randomness ----
 
@@ -154,3 +168,33 @@ p6 <- ggplot(sumT_vars, aes(x = step, y = meanRichness, colour = factor(replicat
   theme(legend.position = "none")
 
 p5+p6
+
+
+## Temp Seq Plots with Season and stoch, so each line is a unique set of randomness ----
+
+p7 <- ggplot(sumT_varsSeason, aes(x = step, y = meanBiomass, colour = factor(replicate)))+
+  geom_line()+
+  theme_bw()+
+  theme(legend.position = "none")
+
+p8 <- ggplot(sumT_varsSeason, aes(x = step, y = meanRichness, colour = factor(replicate)))+
+  geom_line()+
+  theme_bw()+
+  theme(legend.position = "none")
+
+p7+p8
+
+# ALL Plots In ----
+(p1|p2|p3|p4)/(p5|p6|p7|p8)
+
+
+# Checking that Temp 20 in sequence == reference 20 mean ----
+## TRUE ----
+seq20_step1 <- Lin %>% 
+  filter(temp == 20) %>%
+  summarise(meanRichness = mean(richness),
+            meanBiomass = mean(biomass))
+
+seq20_step1
+sumT %>% filter(step == 1 & tempSeq == "Lin") %>% 
+  select(meanRichness, meanBiomass)
