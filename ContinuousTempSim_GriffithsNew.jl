@@ -213,7 +213,7 @@ CSV.write("temp20Cons", out20)
 CSV.write("temp40Cons", out40)
 df_LV = reduce(vcat,df_vector_LV)
 CSV.write("tempLinVar.csv", df_LV)
-df_LV = reduce(vcat,df_vector_LVS)
+df_LVS = reduce(vcat,df_vector_LVS)
 CSV.write("tempLinVarSeason.csv", df_LVS)
 
 
