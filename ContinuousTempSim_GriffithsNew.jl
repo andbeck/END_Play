@@ -24,11 +24,26 @@ T_season3 = repeat([40.5, 39.5], 10)
 # linear with variation
 # consider t versus normal to change frequency of things in tails
 Random.seed!(123)
-d = Normal(1.5,3)
+nn = Normal(1.5,3)
+ln_low = LogNormal(1.5, 0.1)
+ln_high = LogNormal(0, 0.5)
 
 # 10 rvars
-rvars = rand(d, length(T_lin), 10)
+rvars = rand(nn, length(T_lin), 10)
+rvars_low = rand(ln_low, length(T_lin), 10)
+rvars_hi = rand(ln_high, length(T_lin), 10)
+
+# test plot
+p_n = histogram(vec(rvars), title = "Normal", xlims = (-5,20))
+vline!([1.5])
+p_low = histogram(vec(rvars_low), xlims = (-5,20))
+vline!([1.5])
+p_high = histogram(vec(rvars_hi), xlims = (-5,20))
+vline!([1.5])
+plot(p_low, p_high, layout = (2,1))
+
 T_lin_var = T_lin .+ rvars
+T_lin_var_tt = T_lin .+ rvars_4
 
 # linear with 'season'
 ll = trunc(Int, length(T_lin)/2)
