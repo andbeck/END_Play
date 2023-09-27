@@ -24,35 +24,45 @@ T_season3 = repeat([40.5, 39.5], 10)
 # linear with variation
 # consider t versus normal to change frequency of things in tails
 Random.seed!(123)
-nn = Normal(1.5,3)
-ln_low = LogNormal(1.5, 0.1)
-ln_high = LogNormal(0, 0.5)
+nn = Normal(0,3)
+# low levels extreme
+tt_narrow = TDist(1.5)
+# high levels extreme
+tt_wide = TDist(1)
 
-# 10 rvars
-rvars = rand(nn, length(T_lin), 10)
-rvars_low = rand(ln_low, length(T_lin), 10)
-rvars_hi = rand(ln_high, length(T_lin), 10)
+# # test/view
+# nvars = rand(nn, 1000)
+# tvars_n = rand(tt_narrow, 1000)
+# tvars_w= rand(tt_narrow, 1000)
 
-# test plot
-p_n = histogram(vec(rvars), title = "Normal", xlims = (-5,20))
-vline!([1.5])
-p_low = histogram(vec(rvars_low), xlims = (-5,20))
-vline!([1.5])
-p_high = histogram(vec(rvars_hi), xlims = (-5,20))
-vline!([1.5])
-plot(p_low, p_high, layout = (2,1))
+# pn = histogram(nvars, xlims = (-15,15))
+# ptn = histogram(tvars_n, xlims = (-15,15))
+# ptw= histogram(tvars_w, xlims = (-15,15))
+# plot(pn, ptn, ptw, layout=(3,1))
 
-T_lin_var = T_lin .+ rvars
-T_lin_var_tt = T_lin .+ rvars_4
+# 10 sets of variation
+tvars_norm = rand(nn, length(T_lin), 10)
+tvars_loExt = rand(tt_narrow, length(T_lin), 10)
+tvars_highExt = rand(tt_wide, length(T_lin), 10)
+
+# add randoms to T
+T_lin_varNorm = T_lin .+ tvars_norm
+T_lin_varloExt = T_lin .+ tvars_loExt
+T_lin_varhighExt = T_lin .+ tvars_highExt
+
 
 # linear with 'season'
 ll = trunc(Int, length(T_lin)/2)
 # ensure length is correct
 var_season = repeat([1.5, -3], ll)
 
+# add seasonal to T
 T_lin_season = collect(T_lin) + var_season
 
-T_lin_season_var = T_lin_season .+ rvars
+# add vars to seasonal
+T_lin_season_varNorm = T_lin_season .+ tvars_norm
+T_lin_season_varloExt = T_lin_season .+ tvars_loExt
+T_lin_season_varhighExt= T_lin_season .+ tvars_highExt
 
 p1 = plot(1:1:20, T_lin, legend = false,
     title = "L")
@@ -60,12 +70,30 @@ p2 = plot(1:1:20, [T_season1, T_season2, T_season3],
     title = "S", legend = false)
 p3 = plot(1:1:20, T_lin_season, legend = false,
     title = "L+S")
-p4 = plot(1:1:20, T_lin_var, legend = false,
-    title = "L+V")
-p5 = plot(1:1:20, T_lin_season_var, legend = false,
-    title = "L+S+V")
+# linear with variations
+p4 = plot(1:1:20, T_lin_varNorm, legend = false,
+    title = "L+V Norm", ylims = (0,60))
 
-plot(p1, p2, p3, p4, p5, layout = (2,3))
+p5 = plot(1:1:20, T_lin_varloExt, legend = false,
+    title = "L+V loExt", ylims = (0,60))
+
+p6 = plot(1:1:20, T_lin_varhighExt, legend = false,
+    title = "L+V hiExt", ylims = (0,60))
+
+# linear with season and variations
+p7 = plot(1:1:20, T_lin_season_varNorm, legend = false,
+    title = "L+V+S Norm", ylims = (0,60))
+
+p8 = plot(1:1:20, T_lin_season_varloExt, legend = false,
+    title = "L+V+S loExt", ylims = (0,60))
+
+p9 = plot(1:1:20, T_lin_season_varhighExt, legend = false,
+    title = "L+V+S hiExt", ylims = (0,60))
+
+plot(p1, p2, p3, 
+    p4, p5, p6,
+    p7, p8, p9, layout = (3,3))
+
 
 ######################
 # K Stuff
@@ -210,7 +238,6 @@ df_vector_LV = Any[]
 for i in 1:size(T_lin_var, 2)
     push!(df_vector_LV, simTemp(FWs, T_lin_var[:,i]))
 end
-
 
 #Linear with Season and Variation (reps)
 df_vector_LVS = Any[]
