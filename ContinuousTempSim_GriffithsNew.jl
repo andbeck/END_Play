@@ -1,27 +1,60 @@
 using EcologicalNetworksDynamics
 using Random, DataFrames, Plots, CSV, Distributions
 
-## TO DO: check that 20c for reference == 20c first time step for all others.
+## OVERVIEW
+# This script implements work to evaluate the impacts of continuous increases in temperature on the biomass, stablility
+# and diversity of ecological communities.  The UNIQUE aspect of this work is evaluating how a single change in temperature generates
+# changes in biodviersity, biomass, stability and structure of a community that represents a contingecy
+# for the next change: the impacts of changes at t+2 are contingent on changes that occured between t and t+1.
+
+## We simulate multiple scenarios
+
+## REFERENCE POINTS
+# Fixed Temperatures at 10 and 40 (endpoints)
+
+## CONTINGENCY SCENARIOS
+# Seasonal like variation at 10, 25 and 40 (constant mean, cycling temps)
+# Linear Increase from 10 to 40 (20 steps of temperature change)
+# # ToDo: is this a sensible range?
+# # original was 3 x 4 degree changes to mimic IPCC.
+# Linear Increase with Seasonal like cycles
+# Linear Increase with stochastic variation
+# # ±5C max, random, via truncated t distribution
+# # ±10C max,  random, via truncated t distribution
+# # ± 15C max, random, via truncated t distribution
+
+## Method
+# Implement END model starting at 10C, for temp x and run to eq
+# collect biomass, bidiversity and stability data
+# update network with extinction events
+# Implment END model with updated network at next temp
+# Repeat
+
+## NOTES ###############################
+# What to do about disconnected species
+########################################
 
 ######################
 # Temp options
 ######################
 
-# min and max
-T_fix20 = 20
+## reference fixed temperatures
+T_fix10 = 10
 T_fix40 = 40
 
-# linear increase
-T_lin = collect(range(20, 40 , 20)) # 20 temperature steps
+## linear increase
+# 20 steps from 10c to 40c.
+T_lin = collect(range(10, 40 , 20)) # 20 temperature steps
 
-# seasonal flip flops
-# need to do this at 20, 30 and 40 with ±1.5 to match T_lin_season
-T_season1 = repeat([19.5, 20.5], 10)
-T_season2 = repeat([30.5, 29.5], 10)
+## seasonal flip flops
+# need to do this at 10, 25 and 40 with ±1.5 to match T_lin_season
+# two temps, each 10x == 20
+T_season1 = repeat([10.5, 9.5], 10)
+T_season2 = repeat([25.5, 24.5], 10)
 T_season3 = repeat([40.5, 39.5], 10)
 
 
-# linear with variation
+## sources of variation
 # using t versus normal to change frequency of things in tails
 Random.seed!(8675309)
 # truncated normal with max change of ±5
@@ -35,48 +68,45 @@ tt_narrow = truncated(TDist(2), -10, 10)
 # truncated t with max change of ±10
 tt_wide = truncated(TDist(2), -20, 20)
 
-# # test/view distribution of variation
-# # tvars_n (narrow has wider tail than normal, but not too wide)
-# # tvars_2 (narrow has much wider tail than normal, and narrow)
-#nvars = rand(nn, length(T_lin), 50)
+# generate 20 random values x 50 replicates to add to linear and season
 tvars_superN = rand(tt_supernarrow, length(T_lin), 50)
 tvars_n = rand(tt_narrow, length(T_lin), 50)
 tvars_w= rand(tt_wide, length(T_lin), 50)
 
-#extrema - actual range of temperature variations.
-extrema(tvars_superN)
-extrema(tvars_n)
-extrema(tvars_w)
+## test/view distribution of variation
+# #extrema - actual range of temperature variations.
+# extrema(tvars_superN)
+# extrema(tvars_n)
+# extrema(tvars_w)
 
-# visualise distrinbution of temp change; xlims  = extrema of widest
-#pn = histogram(vec(nvars), xlims = (-20, 20))
-ptsn = histogram(vec(tvars_superN), xlims = extrema(tvars_w))
-ptn = histogram(vec(tvars_n), xlims = extrema(tvars_w))
-ptw= histogram(vec(tvars_w), xlims = extrema(tvars_w))
+# # visualise distrinbution of temp change; xlims  = extrema of widest
+# ptsn = histogram(vec(tvars_superN), xlims = extrema(tvars_w))
+# ptn = histogram(vec(tvars_n), xlims = extrema(tvars_w))
+# ptw= histogram(vec(tvars_w), xlims = extrema(tvars_w))
 
-plot(ptsn, ptn, ptw, layout=(4,1))
+# plot(ptsn, ptn, ptw, layout=(3,1))
 
-
-
-# add randoms to T
-T_lin_varNorm = T_lin .+ tvars_norm
-T_lin_varloExt = T_lin .+ tvars_loExt
-T_lin_varhighExt = T_lin .+ tvars_highExt
-
-
-# linear with 'season'
-ll = trunc(Int, length(T_lin)/2)
+## Generate Linear + Season
 # ensure length is correct
+ll = trunc(Int, length(T_lin)/2)
+# generate cycle on linear increase
+# add 1.5 to start, than -3: generates 0.5c changes on line
 var_season = repeat([1.5, -3], ll)
-
 # add seasonal to T
 T_lin_season = collect(T_lin) + var_season
 
-# add vars to seasonal
-T_lin_season_varNorm = T_lin_season .+ tvars_norm
-T_lin_season_varloExt = T_lin_season .+ tvars_loExt
-T_lin_season_varhighExt= T_lin_season .+ tvars_highExt
+## Generate Linear + Variation
+# add randoms to T
+T_lin_varNorm = T_lin .+ tvars_superN # super narrow
+T_lin_varloExt = T_lin .+ tvars_n # narrow
+T_lin_varhighExt = T_lin .+ tvars_w # wide
 
+## Linear + Season + Variation
+T_lin_season_varNorm = T_lin_season .+ tvars_superN
+T_lin_season_varloExt = T_lin_season .+ tvars_n
+T_lin_season_varhighExt= T_lin_season .+ tvars_w
+
+## Generate Experimental Design plot
 p1 = plot(1:1:20, T_lin, legend = false,
     title = "L")
 p2 = plot(1:1:20, [T_season1, T_season2, T_season3],
@@ -112,6 +142,8 @@ plot(p1, p2, p3,
 # K Stuff
 ######################
 
+# Currently only using K = 1
+
 K_range = 1.:1:20 # K valus
 
 # organise some K thing.s
@@ -124,9 +156,12 @@ m0 = 0.01
 # food webs from niche model
 ######################
 
-# make 10 food web using niche model and Z value 100
+# make 25 food web using niche model and Z value 100
+# species richness of 30
+# connetance  = 0.1
+
 Random.seed!(22)
-web_rep = 10 # reps
+web_rep = 25 # reps
 FWs = []
 for _ in 1:web_rep
     fw = FoodWeb(nichemodel, 30; C=0.1, Z=100)
@@ -139,8 +174,11 @@ n_T, n_K = 20, 20
 n_web = length(FWs)
 
 # dataframe to store results
-n_lines = n_web * n_T # 20 temps, 10 webs
+n_lines = n_web * n_T # 20 temps, 25 webs
 
+##############################################
+## MASTER FUNCTION TO DO THE CONTINGENCY WORK
+##############################################
 simTemp = function(webs, tempSeq)
 
     # set collection
@@ -234,49 +272,83 @@ simTemp = function(webs, tempSeq)
     return(df)
 end
 
+
 ################################
 ## SIMULATIONS USING FUNCTION ##
 ################################
 
 outLin = simTemp(FWs, T_lin)
-outSeason20 = simTemp(FWs, T_season1)
-outSeason30 = simTemp(FWs, T_season2)
+outSeason10 = simTemp(FWs, T_season1)
+outSeason25 = simTemp(FWs, T_season2)
 outSeason40 = simTemp(FWs, T_season3)
 outLinSeason = simTemp(FWs, T_lin_season)
-out20 = simTemp(FWs, T_fix20)
+out10 = simTemp(FWs, T_fix10)
 out40 = simTemp(FWs, T_fix40)
 
-#Linear with Variation (reps)
-df_vector_LV = Any[]
-for i in 1:size(T_lin_var, 2)
-    push!(df_vector_LV, simTemp(FWs, T_lin_var[:,i]))
+## Linear with Variation (reps)
+
+# super narrow
+df_vector_LV_n = Any[]
+for i in 1:size(T_lin_varNorm, 2)
+    push!(df_vector_LV_n, simTemp(FWs, T_lin_varNorm[:,i]))
 end
 
-#Linear with Season and Variation (reps)
-df_vector_LVS = Any[]
-for i in 1:size(T_lin_season_var, 2)
-    push!(df_vector_LVS, simTemp(FWs, T_lin_season_var[:,i]))
+#wider variation
+df_vector_LV_lo = Any[]
+for i in 1:size(T_lin_varloExt, 2)
+    push!(df_vector_LV_lo, simTemp(FWs, T_lin_varloExt[:,i]))
 end
+
+# extremes
+df_vector_LV = Any[]
+for i in 1:size(T_lin_varhighExt, 2)
+    push!(df_vector_LV_hi, simTemp(FWs, T_lin_varhighExt[:,i]))
+end
+
+##Linear with Season and Variation (reps)
+
+# narrow
+df_vector_LVS_n = Any[]
+for i in 1:size(T_lin_season_varNorm, 2)
+    push!(df_vector_LVS_n, simTemp(FWs, T_lin_season_varNorm[:,i]))
+end
+
+# wider variation
+df_vector_LVS_lo = Any[]
+for i in 1:size(T_lin_season_varloExt, 2)
+    push!(df_vector_LVS_lo, simTemp(FWs, T_lin_season_varloExt[:,i]))
+end
+
+#extremes
+df_vector_LVS_hi = Any[]
+for i in 1:size(T_lin_season_varhighExt, 2)
+    push!(df_vector_LVS_hi, simTemp(FWs, T_lin_season_varhighExt[:,i]))
+end
+
 
 # Send to R Visualisation
 CSV.write("tempLinRun.csv", outLin)
-CSV.write("tempSeason20.csv", outSeason20)
-CSV.write("tempSeason30.csv", outSeason30)
+CSV.write("tempSeason10.csv", outSeason10)
+CSV.write("tempSeason25.csv", outSeason25)
 CSV.write("tempSeason40.csv", outSeason40)
 CSV.write("tempLinSeason.csv", outLinSeason)
-CSV.write("temp20Cons", out20)
+CSV.write("temp10Cons", out10)
 CSV.write("temp40Cons", out40)
-df_LV = reduce(vcat,df_vector_LV)
-CSV.write("tempLinVar.csv", df_LV)
-df_LVS = reduce(vcat,df_vector_LVS)
-CSV.write("tempLinVarSeason.csv", df_LVS)
 
+df_LVn = reduce(vcat,df_vector_LV_n)
+df_LVlo = reduce(vcat,df_vector_LV_lo)
+df_LVhi = reduce(vcat,df_vector_LVS_hi)
 
-# p1 = plot(df[!,:temp] .-273.15, df[!,:richness])
-# ylabel!("Richness")
-# p2 = plot(df[!,:temp] .-273.15, df[!,:stability])
-# ylabel!("Stability")
-# p3 = plot(df[!,:temp] .-273.15, df[!,:biomass])
-# ylabel!("Biomass")
+CSV.write("tempLinVar_n.csv", df_LVn)
+CSV.write("tempLinVar_lo.csv", df_LVlo)
+CSV.write("tempLinVar_hi.csv", df_LVhi)
 
-# plot(p1, p2, p3, layout=(1,3))
+df_LVSn = reduce(vcat,df_vector_LVS_n)
+df_LVSlo = reduce(vcat,df_vector_LVS_lo)
+df_LVShi = reduce(vcat,df_vector_LVS_hi)
+
+CSV.write("tempLinVarSeason_n.csv", df_LVS_n)
+CSV.write("tempLinVarSeason_lo.csv", df_LVS_lo)
+CSV.write("tempLinVarSeason_hi.csv", df_LVS_hi)
+
+### Go to exlploreContTempData.R for figures and stats
