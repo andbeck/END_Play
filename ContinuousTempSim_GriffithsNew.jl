@@ -22,28 +22,41 @@ T_season3 = repeat([40.5, 39.5], 10)
 
 
 # linear with variation
-# consider t versus normal to change frequency of things in tails
-Random.seed!(123)
-nn = Normal(0,3)
+# using t versus normal to change frequency of things in tails
+Random.seed!(8675309)
+# truncated normal with max change of ±5
+# nn = truncated(Normal(0,2), -5,5)
+# trucated t super narrow ±5 change
+tt_supernarrow = truncated(TDist(2), -5, 5)
 # low levels extreme
-tt_narrow = TDist(1.5)
+# truncated t with max change of ±10
+tt_narrow = truncated(TDist(2), -10, 10)
 # high levels extreme
-tt_wide = TDist(1)
+# truncated t with max change of ±10
+tt_wide = truncated(TDist(2), -20, 20)
 
-# # test/view
-# nvars = rand(nn, 1000)
-# tvars_n = rand(tt_narrow, 1000)
-# tvars_w= rand(tt_narrow, 1000)
+# # test/view distribution of variation
+# # tvars_n (narrow has wider tail than normal, but not too wide)
+# # tvars_2 (narrow has much wider tail than normal, and narrow)
+#nvars = rand(nn, length(T_lin), 50)
+tvars_superN = rand(tt_supernarrow, length(T_lin), 50)
+tvars_n = rand(tt_narrow, length(T_lin), 50)
+tvars_w= rand(tt_wide, length(T_lin), 50)
 
-# pn = histogram(nvars, xlims = (-15,15))
-# ptn = histogram(tvars_n, xlims = (-15,15))
-# ptw= histogram(tvars_w, xlims = (-15,15))
-# plot(pn, ptn, ptw, layout=(3,1))
+#extrema - actual range of temperature variations.
+extrema(tvars_superN)
+extrema(tvars_n)
+extrema(tvars_w)
 
-# 10 sets of variation
-tvars_norm = rand(nn, length(T_lin), 10)
-tvars_loExt = rand(tt_narrow, length(T_lin), 10)
-tvars_highExt = rand(tt_wide, length(T_lin), 10)
+# visualise distrinbution of temp change; xlims  = extrema of widest
+#pn = histogram(vec(nvars), xlims = (-20, 20))
+ptsn = histogram(vec(tvars_superN), xlims = extrema(tvars_w))
+ptn = histogram(vec(tvars_n), xlims = extrema(tvars_w))
+ptw= histogram(vec(tvars_w), xlims = extrema(tvars_w))
+
+plot(ptsn, ptn, ptw, layout=(4,1))
+
+
 
 # add randoms to T
 T_lin_varNorm = T_lin .+ tvars_norm
@@ -72,23 +85,23 @@ p3 = plot(1:1:20, T_lin_season, legend = false,
     title = "L+S")
 # linear with variations
 p4 = plot(1:1:20, T_lin_varNorm, legend = false,
-    title = "L+V Norm", ylims = (0,60))
+    title = "L+V superLoExt", ylims = extrema(T_lin_season_varhighExt))
 
 p5 = plot(1:1:20, T_lin_varloExt, legend = false,
-    title = "L+V loExt", ylims = (0,60))
+    title = "L+V loExt", ylims = extrema(T_lin_season_varhighExt))
 
 p6 = plot(1:1:20, T_lin_varhighExt, legend = false,
-    title = "L+V hiExt", ylims = (0,60))
+    title = "L+V hiExt", ylims = extrema(T_lin_season_varhighExt))
 
 # linear with season and variations
 p7 = plot(1:1:20, T_lin_season_varNorm, legend = false,
-    title = "L+V+S Norm", ylims = (0,60))
+    title = "L+V+S superLoExt", ylims = extrema(T_lin_season_varhighExt))
 
 p8 = plot(1:1:20, T_lin_season_varloExt, legend = false,
-    title = "L+V+S loExt", ylims = (0,60))
+    title = "L+V+S loExt", ylims = extrema(T_lin_season_varhighExt))
 
 p9 = plot(1:1:20, T_lin_season_varhighExt, legend = false,
-    title = "L+V+S hiExt", ylims = (0,60))
+    title = "L+V+S hiExt", ylims = extrema(T_lin_season_varhighExt))
 
 plot(p1, p2, p3, 
     p4, p5, p6,
