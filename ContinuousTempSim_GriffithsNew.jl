@@ -300,7 +300,7 @@ for i in 1:size(T_lin_varloExt, 2)
 end
 
 # extremes
-df_vector_LV = Any[]
+df_vector_LV_hi = Any[]
 for i in 1:size(T_lin_varhighExt, 2)
     push!(df_vector_LV_hi, simTemp(FWs, T_lin_varhighExt[:,i]))
 end
@@ -332,8 +332,8 @@ CSV.write("tempSeason10.csv", outSeason10)
 CSV.write("tempSeason25.csv", outSeason25)
 CSV.write("tempSeason40.csv", outSeason40)
 CSV.write("tempLinSeason.csv", outLinSeason)
-CSV.write("temp10Cons", out10)
-CSV.write("temp40Cons", out40)
+CSV.write("temp10Cons.csv", out10)
+CSV.write("temp40Cons.csv", out40)
 
 df_LVn = reduce(vcat,df_vector_LV_n)
 df_LVlo = reduce(vcat,df_vector_LV_lo)
