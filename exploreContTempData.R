@@ -3,11 +3,11 @@ library(patchwork)
 
 # Data Sets ----------------------------------------
 
-## reference 20/40 ----
-fix20 <- read_csv("temp20Cons") %>% 
-  mutate(fw = factor(fw)) %>% 
+## reference 10/40 ----
+fix10 <- read_csv("temp10Cons.csv") %>% 
+  mutate(fw = factor(fw)) %>%
   mutate(temp = temp - 273.15)
-fix40 <- read_csv("temp40Cons") %>% 
+fix40 <- read_csv("temp40Cons.csv") %>% 
   mutate(fw = factor(fw)) %>% 
   mutate(temp = temp - 273.15)
 
@@ -18,15 +18,15 @@ Lin <- read_csv("tempLinRun.csv") %>%
 
 ## Seasonal change at 20, 30, 40 ----
 
-Season20 <- read_csv("tempSeason20.csv") %>% 
+Season10 <- read_csv("tempSeason10.csv") %>% 
   mutate(fw = factor(fw)) %>% 
   mutate(temp = temp - 273.15)
 
-Season30 <- read_csv("tempSeason30.csv") %>% 
+Season25 <- read_csv("tempSeason25.csv") %>% 
   mutate(fw = factor(fw)) %>% 
   mutate(temp = temp - 273.15)
 
-Season40 <- read_csv("tempSeason30.csv") %>% 
+Season40 <- read_csv("tempSeason40.csv") %>% 
   mutate(fw = factor(fw)) %>% 
   mutate(temp = temp - 273.15)
 
@@ -38,25 +38,54 @@ LinSeason <- read_csv("tempLinSeason.csv") %>%
 
 ## Lin + Variation ----
 
-LinVar <- read_csv("tempLinVar.csv") %>% 
+LinVar_n <- read_csv("tempLinVar_n.csv") %>% 
   mutate(fw = factor(fw)) %>% 
   mutate(temp = temp - 273.15) %>% 
-  mutate(replicate = rep(1:10, each = 200))
+  # fws = 25; 1000 =  50reps of 20 temps
+  mutate(replicate = rep(1:25, each = 1000))
+
+LinVar_lo <- read_csv("tempLinVar_lo.csv") %>% 
+  mutate(fw = factor(fw)) %>% 
+  mutate(temp = temp - 273.15) %>% 
+  # fws = 25; 1000 =  50reps of 20 temps
+  mutate(replicate = rep(1:25, each = 1000))
+
+LinVar_hi <- read_csv("tempLinVar_hi.csv") %>% 
+  mutate(fw = factor(fw)) %>% 
+  mutate(temp = temp - 273.15) %>% 
+  # fws = 25; 1000 =  50reps of 20 temps
+  mutate(replicate = rep(1:25, each = 1000))
 
 ## Lin + Season + Variation ----
 
-LinVarSeason <- read_csv("tempLinVarSeason.csv") %>% 
+LinVarSeason_n <- read_csv("tempLinVarSeason_n.csv") %>% 
   mutate(fw = factor(fw)) %>% 
   mutate(temp = temp - 273.15) %>% 
-  mutate(replicate = rep(1:10, each = 200))
+  # fws = 25; 1000 =  50reps of 20 temps
+  mutate(replicate = rep(1:25, each = 1000))
+
+LinVarSeason_lo <- read_csv("tempLinVarSeason_lo.csv") %>% 
+  mutate(fw = factor(fw)) %>% 
+  mutate(temp = temp - 273.15) %>% 
+  # fws = 25; 1000 =  50reps of 20 temps
+  mutate(replicate = rep(1:25, each = 1000))
+
+LinVarSeason_hi <- read_csv("tempLinVarSeason_hi.csv") %>% 
+  mutate(fw = factor(fw)) %>% 
+  mutate(temp = temp - 273.15) %>% 
+  # fws = 25; 1000 =  50reps of 20 temps
+  mutate(replicate = rep(1:25, each = 1000))
+
 
 ## Combine all without variation ----
-
-df <- bind_rows(Lin, Season20, Season30, Season40, LinSeason) %>% 
+# each = 25fws*20times
+df_novar <- bind_rows(Lin, Season10, Season25, Season40, LinSeason) %>% 
   mutate(tempSeq = rep(c("Lin",
-                         "Season20", "Season30", "Season40",
+                         "Season10", "Season25", "Season40",
                          "LinSeason"), 
-                       each = 200))
+                       each = 500))
+
+## Combine all with variation
 
 # summarise ------------------------------------------
 
@@ -64,9 +93,20 @@ df <- bind_rows(Lin, Season20, Season30, Season40, LinSeason) %>%
 # for linear it is 20 -> 40
 # for season it is 21.5 -> 19.5 repeated for 10 cycles
 
+## Reference Temperatures
+ref_df <- bind_rows(fix10, fix40) %>% 
+  mutate(fixedTemp = rep(c(10,40), each = 25)) # nwebs
+
+## reference data to annotate sequence plots ----
+sumRef <- ref_df %>% 
+  group_by(temp) %>% 
+  summarise(
+    meanRich = mean(richness),
+    meanBiomass = mean(biomass)
+  )
 
 ## summarise all with non var to mean from among n networks ----
-sumT <- df %>% 
+sum_novar <- df_novar %>% 
   group_by(tempSeq, step) %>% 
   summarise(
     meanRichness = mean(richness),
@@ -76,7 +116,7 @@ sumT <- df %>%
   )
 
 ## summarise random var data to have single mean among 10 webs per random run ----
-sumT_vars <- LinVar %>% 
+sum_var <- LinVar %>% 
   group_by(replicate, step) %>% 
   summarise(meanRichness = mean(richness),
             meanBiomass = mean(biomass))
@@ -90,31 +130,21 @@ sumT_varsSeason <- LinVarSeason %>%
 # plots, faceted by tempSeq type. -------------------------------
 
 ## reference plot ----
-ref_df <- bind_rows(fix20, fix40) %>% 
-  mutate(fixedTemp = rep(c(20,40), each = 10)) # nwebs
-
 p1 <- ggplot(ref_df, aes(x = factor(temp), y = biomass, fill = factor(temp)))+
   geom_boxplot()+
-  scale_fill_manual(values = c("20" = "blue", "40" = "red"))+
+  scale_fill_manual(values = c("10" = "blue", "40" = "red"))+
   theme_bw()+
   theme(legend.position = "none")
 
 p2 <- ggplot(ref_df, aes(x = factor(temp), y = richness, fill = factor(temp)))+
   geom_boxplot()+
-  scale_fill_manual(values = c("20" = "blue", "40" = "red"))+
+  scale_fill_manual(values = c("10" = "blue", "40" = "red"))+
   theme_bw()+
   theme(legend.position = "none")
 
 p1+p2
 
-## reference data to annotate sequence plots ----
 
-sumRef <- ref_df %>% 
-  group_by(temp) %>% 
-  summarise(
-    meanRich = mean(richness),
-    meanBiomass = mean(biomass)
-  )
 
 # temperature sequeucen treatment plots ----
 
