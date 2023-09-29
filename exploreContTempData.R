@@ -115,11 +115,40 @@ sum_novar <- df_novar %>%
     seBiomass = 1.96*(sd(biomass)/sqrt(n()))
   )
 
-## summarise random var data to have single mean among 10 webs per random run ----
-sum_var <- LinVar %>% 
-  group_by(replicate, step) %>% 
+## summarise random var data to have single mean ----
+# for each of 25 webs (e.g. over the 50 randoms for each web)
+# or per random run (e.g. over the 25 webs)
+sum_var_n <- LinVar_n %>% 
+  # mean by web across reps to match no-vars
+  group_by(fw, step) %>% 
   summarise(meanRichness = mean(richness),
             meanBiomass = mean(biomass))
+
+sum_var_lo <- LinVar_lo %>% 
+  # mean by web across reps to match no-vars
+  group_by(fw, step) %>% 
+  summarise(meanRichness = mean(richness),
+            meanBiomass = mean(biomass))
+
+sum_var_hi <- LinVar_hi %>% 
+  # mean by web across reps to match no-vars
+  group_by(fw, step) %>% 
+  summarise(meanRichness = mean(richness),
+            meanBiomass = mean(biomass))
+
+
+sum_allLinVar <- bind_rows(sum_var_n,
+                           sum_var_lo,
+                           sum_var_hi) %>% 
+  tibble() %>% 
+  mutate(varType = rep(c("n","lo","hi"), each = 500))
+
+hyperSum_allLinVar <- sum_allLinVar %>% 
+  group_by(step) %>% 
+  summarise(hypermeanBiomass = mean(meanBiomass),
+            hyperseBiomass = 1.96*sd(meanBiomass),
+            hypermeanRichness = mean(meanRichness),
+            hyperseRichness = 1.96*sd(meanRichness))
 
 ## summarise random var+Season data to have single mean among 10 webs per random run ----
 sumT_varsSeason <- LinVarSeason %>% 
@@ -146,11 +175,11 @@ p1+p2
 
 
 
-# temperature sequeucen treatment plots ----
+# temperature sequence treatment plots ----
 
-p3 <- ggplot(df, aes(x = step, y = biomass, col = fw))+
-  geom_point()+
-  geom_line()+
+p3 <- ggplot(df_novar, aes(x = step, y = biomass, col = fw))+
+  geom_point(alpha = 0.1)+
+  geom_line(alpha = 0.1)+
   geom_line(data = sumT, aes(x = step, y = meanBiomass), col = "black")+
   geom_ribbon(data = sumT, aes(x = step, y = meanBiomass,
                                ymax = meanBiomass+seBiomass,
@@ -163,11 +192,11 @@ p3 <- ggplot(df, aes(x = step, y = biomass, col = fw))+
   theme_bw()+
   theme(legend.position = "none")
 
-p3+p1
+#p3+p1
 
-p4 <- ggplot(df, aes(x = step, y = richness, col = fw))+
-  geom_point()+
-  geom_line()+
+p4 <- ggplot(df_novar, aes(x = step, y = richness, col = fw))+
+  geom_point(alpha = 0.1)+
+  geom_line(alpha = 0.1)+
   # add mean + CI ribbon
   geom_line(data = sumT, aes(x = step, y = meanRichness), col = "black")+
   geom_ribbon(data = sumT, aes(x = step, y = meanRichness,
@@ -183,21 +212,37 @@ p4 <- ggplot(df, aes(x = step, y = richness, col = fw))+
   theme_bw()+
   theme(legend.position = "none")
 
-p4+p1
+#p4+p1
+
+p3/p4
 
 ## Temp Seq Plots with stoch, so each line is a unique set of randomness ----
 
-p5 <- ggplot(sumT_vars, aes(x = step, y = meanBiomass, colour = factor(replicate)))+
-  geom_line()+
+p5 <- ggplot(sum_allLinVar, aes(x = step, y = meanBiomass, colour = factor(fw)))+
+  geom_point(alpha = 0.1)+
+  geom_line(alpha = 0.1)+
+  # add mean + CI ribbon
+  geom_line(data = hyperSum_allLinVar, aes(x = step, y = hypermeanBiomass), col = "black")+
+  geom_ribbon(data = hyperSum_allLinVar, aes(x = step, y = hypermeanBiomass,
+                              ymax = hypermeanBiomass + hyperseBiomass,
+                              ymin = hypermeanBiomass - hyperseBiomass), col = "grey80", alpha = 0.25)+
+  facet_wrap(~varType)+
   theme_bw()+
   theme(legend.position = "none")
 
-p6 <- ggplot(sumT_vars, aes(x = step, y = meanRichness, colour = factor(replicate)))+
-  geom_line()+
+p6 <- ggplot(sum_allLinVar, aes(x = step, y = meanRichness, colour = factor(fw)))+
+  geom_point(alpha = 0.1)+
+  geom_line(alpha = 0.1)+
+  # add mean + CI ribbon
+  geom_line(data = hyperSum_allLinVar, aes(x = step, y = hypermeanRichness), col = "black")+
+  geom_ribbon(data = hyperSum_allLinVar, aes(x = step, y = hypermeanRichness,
+                                             ymax = hypermeanRichness+hyperseRichness,
+                                             ymin = hypermeanRichness-hyperseRichness), col = "grey80", alpha = 0.25)+
+  facet_wrap(~varType)+
   theme_bw()+
   theme(legend.position = "none")
 
-p5+p6
+p5/p6
 
 
 ## Temp Seq Plots with Season and stoch, so each line is a unique set of randomness ----
