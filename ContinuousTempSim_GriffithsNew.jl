@@ -184,7 +184,7 @@ simTemp = function(webs, tempSeq)
     # set collection
     df = DataFrame(fw = [], step = [], temp=[], richness = [], stability = [], biomass = [])
 
-    # over replicate (10) webs
+    # over replicate (25) webs
     for f in 1:length(webs)
 
         # start model

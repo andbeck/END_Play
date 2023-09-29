@@ -146,15 +146,42 @@ sum_allLinVar <- bind_rows(sum_var_n,
 hyperSum_allLinVar <- sum_allLinVar %>% 
   group_by(step) %>% 
   summarise(hypermeanBiomass = mean(meanBiomass),
-            hyperseBiomass = 1.96*sd(meanBiomass),
+            hyperseBiomass = 1.96*sd(meanBiomass)/sqrt(n()),
             hypermeanRichness = mean(meanRichness),
-            hyperseRichness = 1.96*sd(meanRichness))
+            hyperseRichness = 1.96*sd(meanRichness)/sqrt(n()))
 
 ## summarise random var+Season data to have single mean among 10 webs per random run ----
-sumT_varsSeason <- LinVarSeason %>% 
-  group_by(replicate, step) %>% 
+sum_varSeason_n <- LinVarSeason_n %>% 
+  group_by(fw, step) %>% 
   summarise(meanRichness = mean(richness),
             meanBiomass = mean(biomass))
+
+sum_varSeason_lo <- LinVarSeason_lo %>% 
+  group_by(fw, step) %>% 
+  summarise(meanRichness = mean(richness),
+            meanBiomass = mean(biomass))
+
+sum_varSeason_hi <- LinVarSeason_hi %>% 
+  group_by(fw, step) %>% 
+  summarise(meanRichness = mean(richness),
+            meanBiomass = mean(biomass))
+
+
+sum_allLinVarSeason <- bind_rows(sum_varSeason_n,
+                           sum_varSeason_lo,
+                           sum_varSeason_hi) %>% 
+  tibble() %>% 
+  mutate(varType = rep(c("n","lo","hi"), each = 500))
+
+hyperSum_allLinVarSeason <- sum_allLinVarSeason %>% 
+  group_by(step) %>% 
+  summarise(hypermeanBiomass = mean(meanBiomass),
+            hyperseBiomass = 1.96*sd(meanBiomass)/sqrt(n()),
+            hypermeanRichness = mean(meanRichness),
+            hyperseRichness = 1.96*sd(meanRichness)/sqrt(n()))
+
+
+
 
 # plots, faceted by tempSeq type. -------------------------------
 
@@ -226,6 +253,10 @@ p5 <- ggplot(sum_allLinVar, aes(x = step, y = meanBiomass, colour = factor(fw)))
   geom_ribbon(data = hyperSum_allLinVar, aes(x = step, y = hypermeanBiomass,
                               ymax = hypermeanBiomass + hyperseBiomass,
                               ymin = hypermeanBiomass - hyperseBiomass), col = "grey80", alpha = 0.25)+
+  # add constant (single temp) means
+  # need to adjust just these colours
+  geom_point(data = sumRef, aes(x = 20, y = meanBiomass, col = factor(meanBiomass)), size = 5)+
+  geom_hline(data = sumRef, aes(yintercept = meanBiomass), linetype = 'dashed')+
   facet_wrap(~varType)+
   theme_bw()+
   theme(legend.position = "none")
@@ -238,6 +269,10 @@ p6 <- ggplot(sum_allLinVar, aes(x = step, y = meanRichness, colour = factor(fw))
   geom_ribbon(data = hyperSum_allLinVar, aes(x = step, y = hypermeanRichness,
                                              ymax = hypermeanRichness+hyperseRichness,
                                              ymin = hypermeanRichness-hyperseRichness), col = "grey80", alpha = 0.25)+
+  # add constant (single temp) means
+  # need to adjust just these colours
+  geom_point(data = sumRef, aes(x = 20, y = meanRich, col = factor(meanRich)), size = 5)+
+  geom_hline(data = sumRef, aes(yintercept = meanRich), linetype = 'dashed')+
   facet_wrap(~varType)+
   theme_bw()+
   theme(legend.position = "none")
@@ -247,20 +282,44 @@ p5/p6
 
 ## Temp Seq Plots with Season and stoch, so each line is a unique set of randomness ----
 
-p7 <- ggplot(sumT_varsSeason, aes(x = step, y = meanBiomass, colour = factor(replicate)))+
-  geom_line()+
+p7 <- ggplot(sum_allLinVarSeason, aes(x = step, y = meanBiomass, colour = factor(fw)))+
+  geom_point(alpha = 0.1)+
+  geom_line(alpha = 0.1)+
+  # add mean + CI ribbon
+  geom_line(data = hyperSum_allLinVar, aes(x = step, y = hypermeanBiomass), col = "black")+
+  geom_ribbon(data = hyperSum_allLinVar, aes(x = step, y = hypermeanBiomass,
+                                             ymax = hypermeanBiomass + hyperseBiomass,
+                                             ymin = hypermeanBiomass - hyperseBiomass), col = "grey80", alpha = 0.25)+
+  # add constant (single temp) means
+  # need to adjust just these colours
+  geom_point(data = sumRef, aes(x = 20, y = meanBiomass, col = factor(meanBiomass)), size = 5)+
+  geom_hline(data = sumRef, aes(yintercept = meanBiomass), linetype = 'dashed')+
+  facet_wrap(~varType)+
   theme_bw()+
   theme(legend.position = "none")
 
-p8 <- ggplot(sumT_varsSeason, aes(x = step, y = meanRichness, colour = factor(replicate)))+
-  geom_line()+
+p8 <- ggplot(sum_allLinVarSeason, aes(x = step, y = meanRichness, colour = factor(fw)))+
+  geom_point(alpha = 0.1)+
+  geom_line(alpha = 0.1)+
+  # add mean + CI ribbon
+  geom_line(data = hyperSum_allLinVar, aes(x = step, y = hypermeanRichness), col = "black")+
+  geom_ribbon(data = hyperSum_allLinVar, aes(x = step, y = hypermeanRichness,
+                                             ymax = hypermeanRichness+hyperseRichness,
+                                             ymin = hypermeanRichness-hyperseRichness), col = "grey80", alpha = 0.25)+
+  # add constant (single temp) means
+  # need to adjust just these colours
+  geom_point(data = sumRef, aes(x = 20, y = meanRich, col = factor(meanRich)), size = 5)+
+  geom_hline(data = sumRef, aes(yintercept = meanRich), linetype = 'dashed')+
+  facet_wrap(~varType)+
   theme_bw()+
   theme(legend.position = "none")
 
-p7+p8
+p7/p8
 
 # ALL Plots In ----
-(p1|p2|p3|p4)/(p5|p6|p7|p8)
+(p3|p4)/((p5|p7|p6|p8))
+
+# (p1|p2|p3|p4)/(p5|p7|p6|p8)
 
 
 # Checking that Temp 20 in sequence == reference 20 mean ----
