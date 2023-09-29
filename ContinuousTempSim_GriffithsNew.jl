@@ -277,13 +277,20 @@ end
 ## SIMULATIONS USING FUNCTION ##
 ################################
 
-outLin = simTemp(FWs, T_lin)
+# reference
+out10 = simTemp(FWs, T_fix10)
+out40 = simTemp(FWs, T_fix40)
+
+# season at three temps
 outSeason10 = simTemp(FWs, T_season1)
 outSeason25 = simTemp(FWs, T_season2)
 outSeason40 = simTemp(FWs, T_season3)
+
+# linear
+outLin = simTemp(FWs, T_lin)
+
+# linear with seasons
 outLinSeason = simTemp(FWs, T_lin_season)
-out10 = simTemp(FWs, T_fix10)
-out40 = simTemp(FWs, T_fix40)
 
 ## Linear with Variation (reps)
 
@@ -326,29 +333,43 @@ for i in 1:size(T_lin_season_varhighExt, 2)
 end
 
 
-# Send to R Visualisation
-CSV.write("tempLinRun.csv", outLin)
-CSV.write("tempSeason10.csv", outSeason10)
-CSV.write("tempSeason25.csv", outSeason25)
-CSV.write("tempSeason40.csv", outSeason40)
-CSV.write("tempLinSeason.csv", outLinSeason)
+## Send to R Visualisation
+
+# reference
 CSV.write("temp10Cons.csv", out10)
 CSV.write("temp40Cons.csv", out40)
 
+# seasons
+CSV.write("tempSeason10.csv", outSeason10)
+CSV.write("tempSeason25.csv", outSeason25)
+CSV.write("tempSeason40.csv", outSeason40)
+
+# linear
+CSV.write("tempLinRun.csv", outLin)
+
+# linear with season
+CSV.write("tempLinSeason.csv", outLinSeason)
+
+# linear with variation
+# requires stacking matrix of 50 random changes using reduce and vcat
 df_LVn = reduce(vcat,df_vector_LV_n)
 df_LVlo = reduce(vcat,df_vector_LV_lo)
-df_LVhi = reduce(vcat,df_vector_LVS_hi)
+df_LVhi = reduce(vcat,df_vector_LV_hi)
 
 CSV.write("tempLinVar_n.csv", df_LVn)
 CSV.write("tempLinVar_lo.csv", df_LVlo)
 CSV.write("tempLinVar_hi.csv", df_LVhi)
 
+# linear with season and variation
+# requires stacking matrix of 50 random changes using reduce and vcat
 df_LVSn = reduce(vcat,df_vector_LVS_n)
 df_LVSlo = reduce(vcat,df_vector_LVS_lo)
 df_LVShi = reduce(vcat,df_vector_LVS_hi)
 
-CSV.write("tempLinVarSeason_n.csv", df_LVS_n)
-CSV.write("tempLinVarSeason_lo.csv", df_LVS_lo)
-CSV.write("tempLinVarSeason_hi.csv", df_LVS_hi)
+CSV.write("tempLinVarSeason_n.csv", df_LVSn)
+CSV.write("tempLinVarSeason_lo.csv", df_LVSlo)
+CSV.write("tempLinVarSeason_hi.csv", df_LVShi)
 
-### Go to exlploreContTempData.R for figures and stats
+###########################################################
+### Go to exlploreContTempData.R for figures and stats ####
+###########################################################
