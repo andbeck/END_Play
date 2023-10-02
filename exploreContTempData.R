@@ -207,32 +207,38 @@ p1+p2
 p3 <- ggplot(df_novar, aes(x = step, y = biomass, col = fw))+
   geom_point(alpha = 0.1)+
   geom_line(alpha = 0.1)+
-  geom_line(data = sumT, aes(x = step, y = meanBiomass), col = "black")+
-  geom_ribbon(data = sumT, aes(x = step, y = meanBiomass,
+  geom_line(data = sum_novar, aes(x = step, y = meanBiomass), col = "black")+
+  geom_ribbon(data = sum_novar, aes(x = step, y = meanBiomass,
                                ymax = meanBiomass+seBiomass,
                                ymin = meanBiomass-seBiomass), col = "grey80", alpha = 0.5)+
   # add constant (single temp) means
   # need to adjust just these colours
-  geom_point(data = sumRef, aes(x = 20, y = meanBiomass, col = factor(meanBiomass)), size = 5)+
-  geom_hline(data = sumRef, aes(yintercept = meanBiomass), linetype = 'dashed')+
+  geom_hline(data = sumRef, aes(yintercept = meanBiomass), 
+             linetype = 'dashed')+
+  geom_text(data = sumRef, aes(x = 20, y = meanBiomass, 
+                               label = as.character(temp),
+                               col = factor(meanBiomass)), size = 5)+
   facet_wrap(~ tempSeq)+
   theme_bw()+
   theme(legend.position = "none")
 
-#p3+p1
+p3
 
 p4 <- ggplot(df_novar, aes(x = step, y = richness, col = fw))+
   geom_point(alpha = 0.1)+
   geom_line(alpha = 0.1)+
   # add mean + CI ribbon
-  geom_line(data = sumT, aes(x = step, y = meanRichness), col = "black")+
-  geom_ribbon(data = sumT, aes(x = step, y = meanRichness,
+  geom_line(data = sum_novar, aes(x = step, y = meanRichness), col = "black")+
+  geom_ribbon(data = sum_novar, aes(x = step, y = meanRichness,
                                ymax = meanRichness+seRichness,
                                ymin = meanRichness-seRichness), col = "grey80", alpha = 0.5)+
   # add constant (single temp) means
   # need to adjust just these colours
-  geom_point(data = sumRef, aes(x = 20, y = meanRich, col = factor(meanRich)), size = 5)+
-  geom_hline(data = sumRef, aes(yintercept = meanRich), linetype = 'dashed')+
+  geom_hline(data = sumRef, aes(yintercept = meanRich), 
+             linetype = 'dashed')+
+  geom_text(data = sumRef, aes(x = 20, y = meanRich, 
+                               label = as.character(temp),
+                               col = factor(meanRich)), size = 5)+
   # facet by sequence
   facet_wrap(~ tempSeq)+
   # theming
@@ -255,8 +261,10 @@ p5 <- ggplot(sum_allLinVar, aes(x = step, y = meanBiomass, colour = factor(fw)))
                               ymin = hypermeanBiomass - hyperseBiomass), col = "grey80", alpha = 0.25)+
   # add constant (single temp) means
   # need to adjust just these colours
-  geom_point(data = sumRef, aes(x = 20, y = meanBiomass, col = factor(meanBiomass)), size = 5)+
   geom_hline(data = sumRef, aes(yintercept = meanBiomass), linetype = 'dashed')+
+  geom_text(data = sumRef, aes(x = 20, y = meanBiomass, 
+                               label = as.character(temp),
+                               col = factor(meanBiomass)), size = 5)+
   facet_wrap(~varType)+
   theme_bw()+
   theme(legend.position = "none")
@@ -271,8 +279,10 @@ p6 <- ggplot(sum_allLinVar, aes(x = step, y = meanRichness, colour = factor(fw))
                                              ymin = hypermeanRichness-hyperseRichness), col = "grey80", alpha = 0.25)+
   # add constant (single temp) means
   # need to adjust just these colours
-  geom_point(data = sumRef, aes(x = 20, y = meanRich, col = factor(meanRich)), size = 5)+
   geom_hline(data = sumRef, aes(yintercept = meanRich), linetype = 'dashed')+
+  geom_text(data = sumRef, aes(x = 20, y = meanRich, 
+                               label = as.character(temp),
+                               col = factor(meanRich)), size = 5)+
   facet_wrap(~varType)+
   theme_bw()+
   theme(legend.position = "none")
@@ -292,8 +302,10 @@ p7 <- ggplot(sum_allLinVarSeason, aes(x = step, y = meanBiomass, colour = factor
                                              ymin = hypermeanBiomass - hyperseBiomass), col = "grey80", alpha = 0.25)+
   # add constant (single temp) means
   # need to adjust just these colours
-  geom_point(data = sumRef, aes(x = 20, y = meanBiomass, col = factor(meanBiomass)), size = 5)+
   geom_hline(data = sumRef, aes(yintercept = meanBiomass), linetype = 'dashed')+
+  geom_text(data = sumRef, aes(x = 20, y = meanBiomass, 
+                               label = as.character(temp),
+                               col = factor(meanBiomass)), size = 5)+
   facet_wrap(~varType)+
   theme_bw()+
   theme(legend.position = "none")
@@ -308,8 +320,10 @@ p8 <- ggplot(sum_allLinVarSeason, aes(x = step, y = meanRichness, colour = facto
                                              ymin = hypermeanRichness-hyperseRichness), col = "grey80", alpha = 0.25)+
   # add constant (single temp) means
   # need to adjust just these colours
-  geom_point(data = sumRef, aes(x = 20, y = meanRich, col = factor(meanRich)), size = 5)+
   geom_hline(data = sumRef, aes(yintercept = meanRich), linetype = 'dashed')+
+  geom_text(data = sumRef, aes(x = 20, y = meanRich, 
+                               label = as.character(temp),
+                               col = factor(meanRich)), size = 5)+
   facet_wrap(~varType)+
   theme_bw()+
   theme(legend.position = "none")
