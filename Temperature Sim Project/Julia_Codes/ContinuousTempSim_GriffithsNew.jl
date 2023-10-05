@@ -32,6 +32,7 @@
 
 ## NOTES ###############################
 # What to do about disconnected species
+# Better to do 4c changes from 12, 18, 25c?
 ########################################
 
 ######################
@@ -43,6 +44,7 @@ using Random, DataFrames, Plots, CSV, Distributions
 
 ###############################################################
 ## Include Function to loop over webs and temperature values ##
+## Imports SimTemp function                                  ##
 ###############################################################
 
 include("TemperatureWebLoopFunction.jl")
@@ -68,7 +70,10 @@ T_season2 = repeat([25.5, 24.5], 10)
 T_season3 = repeat([40.5, 39.5], 10)
 
 
+#########################
 ## sources of variation
+#########################
+
 # using t versus normal to change frequency of things in tails
 Random.seed!(8675309)
 # truncated normal with max change of ±5
@@ -87,20 +92,24 @@ tvars_superN = rand(tt_supernarrow, length(T_lin), 50)
 tvars_n = rand(tt_narrow, length(T_lin), 50)
 tvars_w= rand(tt_wide, length(T_lin), 50)
 
-## test/view distribution of variation
-# #extrema - actual range of temperature variations.
-# extrema(tvars_superN)
-# extrema(tvars_n)
-# extrema(tvars_w)
+# test/view distribution of variation
+#extrema - actual range of temperature variations.
+extrema(tvars_superN)
+extrema(tvars_n)
+extrema(tvars_w)
 
-# # visualise distrinbution of temp change; xlims  = extrema of widest
-# ptsn = histogram(vec(tvars_superN), xlims = extrema(tvars_w))
-# ptn = histogram(vec(tvars_n), xlims = extrema(tvars_w))
-# ptw= histogram(vec(tvars_w), xlims = extrema(tvars_w))
+# visualise distrinbution of temp change; xlims  = extrema of widest
+ptsn = histogram(vec(tvars_superN), xlims = extrema(tvars_w))
+ptn = histogram(vec(tvars_n), xlims = extrema(tvars_w))
+ptw= histogram(vec(tvars_w), xlims = extrema(tvars_w))
 
-# plot(ptsn, ptn, ptw, layout=(3,1))
+# distributions of temp variation
+plot(ptsn, ptn, ptw, layout=(3,1))
 
-## Generate Linear + Season
+###################################
+## Generate Linear + Cycle (Season)
+###################################
+
 # ensure length is correct
 ll = trunc(Int, length(T_lin)/2)
 # generate cycle on linear increase
@@ -120,7 +129,10 @@ T_lin_season_varNorm = T_lin_season .+ tvars_superN
 T_lin_season_varloExt = T_lin_season .+ tvars_n
 T_lin_season_varhighExt= T_lin_season .+ tvars_w
 
+#######################################
 ## Generate Experimental Design plot
+#######################################
+
 p1 = plot(1:1:20, T_lin, legend = false,
     title = "L")
 p2 = plot(1:1:20, [T_season1, T_season2, T_season3],
