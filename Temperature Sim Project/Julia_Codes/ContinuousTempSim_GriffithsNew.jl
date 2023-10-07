@@ -62,13 +62,14 @@ T_fix40 = 40
 # 20 steps from 10c to 40c.
 T_lin = collect(range(10, 40 , 20)) # 20 temperature steps
 
+T_lin_10_14 = collect(range(10, 14, 20))
+
 ## seasonal flip flops
 # need to do this at 10, 25 and 40 with ±1.5 to match T_lin_season
 # two temps, each 10x == 20
 T_season1 = repeat([10.5, 9.5], 10)
 T_season2 = repeat([25.5, 24.5], 10)
 T_season3 = repeat([40.5, 39.5], 10)
-
 
 #########################
 ## sources of variation
@@ -217,6 +218,7 @@ outSeason40 = simTemp(FWs, T_season3)
 
 # linear
 outLin = simTemp(FWs, T_lin)
+outLin_10_14 = simTemp(FWs, T_lin_10_14)
 
 # linear with seasons
 outLinSeason = simTemp(FWs, T_lin_season)
@@ -302,3 +304,5 @@ CSV.write("Data4R/tempLinVarSeason_hi.csv", df_LVShi)
 ###########################################################
 ### Go to exlploreContTempData.R for figures and stats ####
 ###########################################################
+
+# @df outLin_10_14 plot(:step, :richness, group = :fw)
