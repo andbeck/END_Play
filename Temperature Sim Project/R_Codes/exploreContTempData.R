@@ -3,6 +3,12 @@ library(patchwork)
 
 # Data Sets ----------------------------------------
 
+
+## NOTE Re first entry
+# for all simulations where temperatures change, the first entry for
+# richness will be <=30 as it records the richness after the 
+# first euilibrium is reached.
+
 ## reference 10/40 ----
 fix10 <- read_csv("temp10Cons.csv") %>% 
   mutate(fw = factor(fw)) %>%
