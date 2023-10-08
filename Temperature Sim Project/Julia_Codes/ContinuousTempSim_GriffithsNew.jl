@@ -274,19 +274,24 @@ end
 ## Send to R Visualisation
 
 # reference
-CSV.write("Data4R/temp10Cons.csv", out10)
-CSV.write("Data4R/temp40Cons.csv", out40)
+CSV.write("./Temperature Sim Project/Data4R/temp10Cons.csv", out10)
+CSV.write("./Temperature Sim Project/Data4R/temp40Cons.csv", out40)
 
 # seasons
-CSV.write("Data4R/tempSeason10.csv", outSeason10)
-CSV.write("Data4R/tempSeason25.csv", outSeason25)
-CSV.write("Data4R/tempSeason40.csv", outSeason40)
+CSV.write("./Temperature Sim Project/Data4R/tempSeason10.csv", outSeason10)
+CSV.write("./Temperature Sim Project/Data4R/tempSeason25.csv", outSeason25)
+CSV.write("./Temperature Sim Project/Data4R/tempSeason40.csv", outSeason40)
 
 # linear
-CSV.write("Data4R/tempLinRun.csv", outLin)
+CSV.write("./Temperature Sim Project/Data4R/tempLinRun.csv", outLin)
+
+# linear narrow delta t
+CSV.write("./Temperature Sim Project/Data4R/tempLinRun_10_14.csv", outLin_10_14)
+CSV.write("./Temperature Sim Project/Data4R/tempLinRun_18_22.csv", outLin_18_22)
+CSV.write("./Temperature Sim Project/Data4R/tempLinRun_26_30.csv", outLin_26_30)
 
 # linear with season
-CSV.write("Data4R/tempLinSeason.csv", outLinSeason)
+CSV.write("./Temperature Sim Project/Data4R/tempLinSeason.csv", outLinSeason)
 
 # linear with variation
 # requires stacking matrix of 50 random changes using reduce and vcat
@@ -294,9 +299,9 @@ df_LVn = reduce(vcat,df_vector_LV_n)
 df_LVlo = reduce(vcat,df_vector_LV_lo)
 df_LVhi = reduce(vcat,df_vector_LV_hi)
 
-CSV.write("Data4R/tempLinVar_n.csv", df_LVn)
-CSV.write("Data4R/tempLinVar_lo.csv", df_LVlo)
-CSV.write("Data4R/tempLinVar_hi.csv", df_LVhi)
+CSV.write("./Temperature Sim Project/Data4R/tempLinVar_n.csv", df_LVn)
+CSV.write("./Temperature Sim Project/Data4R/tempLinVar_lo.csv", df_LVlo)
+CSV.write("./Temperature Sim Project/Data4R/tempLinVar_hi.csv", df_LVhi)
 
 # linear with season and variation
 # requires stacking matrix of 50 random changes using reduce and vcat
@@ -304,9 +309,9 @@ df_LVSn = reduce(vcat,df_vector_LVS_n)
 df_LVSlo = reduce(vcat,df_vector_LVS_lo)
 df_LVShi = reduce(vcat,df_vector_LVS_hi)
 
-CSV.write("Data4R/tempLinVarSeason_n.csv", df_LVSn)
-CSV.write("Data4R/tempLinVarSeason_lo.csv", df_LVSlo)
-CSV.write("Data4R/tempLinVarSeason_hi.csv", df_LVShi)
+CSV.write("./Temperature Sim Project/Data4R/tempLinVarSeason_n.csv", df_LVSn)
+CSV.write("./Temperature Sim Project/Data4R/tempLinVarSeason_lo.csv", df_LVSlo)
+CSV.write("./Temperature Sim Project/Data4R/tempLinVarSeason_hi.csv", df_LVShi)
 
 ###########################################################
 ### Go to exlploreContTempData.R for figures and stats ####
