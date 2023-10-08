@@ -174,7 +174,7 @@ plot(p1, p2, p3,
 
 # Currently only using K = 1
 
-K_range = 1.:1:20 # K valus
+K_range = 1.:1:20 # K values
 
 # organise some K thing.s
 K_int_values = collect(K_range) # intercept of the carrying capacity (eutrophication)
@@ -224,8 +224,8 @@ outLin = simTemp(FWs, T_lin)
 
 # linear smaller scale delta T
 outLin_10_14 = simTemp(FWs, T_lin_10_14)
-outLin_10_14 = simTemp(FWs, T_lin_10_14)
-outLin_10_14 = simTemp(FWs, T_lin_10_14)
+outLin_18_22 = simTemp(FWs, T_lin_18_22)
+outLin_26_30 = simTemp(FWs, T_lin_26_30)
 
 # linear with seasons
 outLinSeason = simTemp(FWs, T_lin_season)
