@@ -10,53 +10,66 @@ library(patchwork)
 # first euilibrium is reached.
 
 ## reference 10/40 ----
-fix10 <- read_csv("temp10Cons.csv") %>% 
+fix10 <- read_csv("./Data4R/temp10Cons.csv") %>% 
   mutate(fw = factor(fw)) %>%
   mutate(temp = temp - 273.15)
-fix40 <- read_csv("temp40Cons.csv") %>% 
+fix40 <- read_csv("./Data4R/temp40Cons.csv") %>% 
   mutate(fw = factor(fw)) %>% 
   mutate(temp = temp - 273.15)
 
 ## Lin is linear change ----
-Lin <- read_csv("tempLinRun.csv") %>% 
+Lin <- read_csv("./Data4R/tempLinRun.csv") %>% 
+  mutate(fw = factor(fw)) %>% 
+  mutate(temp = temp - 273.15)
+
+## Narrow delta T changes
+Lin_10_14 <- read_csv("./Data4R/tempLinRun_10_14.csv") %>% 
+  mutate(fw = factor(fw)) %>% 
+  mutate(temp = temp - 273.15)
+
+Lin_18_22 <- read_csv("./Data4R/tempLinRun_18_22.csv") %>% 
+  mutate(fw = factor(fw)) %>% 
+  mutate(temp = temp - 273.15)
+
+Lin_26_30 <- read_csv("./Data4R/tempLinRun_26_30.csv") %>% 
   mutate(fw = factor(fw)) %>% 
   mutate(temp = temp - 273.15)
 
 ## Seasonal change at 20, 30, 40 ----
 
-Season10 <- read_csv("tempSeason10.csv") %>% 
+Season10 <- read_csv("./Data4R/tempSeason10.csv") %>% 
   mutate(fw = factor(fw)) %>% 
   mutate(temp = temp - 273.15)
 
-Season25 <- read_csv("tempSeason25.csv") %>% 
+Season25 <- read_csv("./Data4R/tempSeason25.csv") %>% 
   mutate(fw = factor(fw)) %>% 
   mutate(temp = temp - 273.15)
 
-Season40 <- read_csv("tempSeason40.csv") %>% 
+Season40 <- read_csv("./Data4R/tempSeason40.csv") %>% 
   mutate(fw = factor(fw)) %>% 
   mutate(temp = temp - 273.15)
 
 ## Season + Linear ----
 
-LinSeason <- read_csv("tempLinSeason.csv") %>% 
+LinSeason <- read_csv("./Data4R/tempLinSeason.csv") %>% 
   mutate(fw = factor(fw)) %>% 
   mutate(temp = temp - 273.15)
 
 ## Lin + Variation ----
 
-LinVar_n <- read_csv("tempLinVar_n.csv") %>% 
+LinVar_n <- read_csv("./Data4R/tempLinVar_n.csv") %>% 
   mutate(fw = factor(fw)) %>% 
   mutate(temp = temp - 273.15) %>% 
   # fws = 25; 1000 =  50reps of 20 temps
   mutate(replicate = rep(1:25, each = 1000))
 
-LinVar_lo <- read_csv("tempLinVar_lo.csv") %>% 
+LinVar_lo <- read_csv("./Data4R/tempLinVar_lo.csv") %>% 
   mutate(fw = factor(fw)) %>% 
   mutate(temp = temp - 273.15) %>% 
   # fws = 25; 1000 =  50reps of 20 temps
   mutate(replicate = rep(1:25, each = 1000))
 
-LinVar_hi <- read_csv("tempLinVar_hi.csv") %>% 
+LinVar_hi <- read_csv("./Data4R/tempLinVar_hi.csv") %>% 
   mutate(fw = factor(fw)) %>% 
   mutate(temp = temp - 273.15) %>% 
   # fws = 25; 1000 =  50reps of 20 temps
@@ -64,19 +77,19 @@ LinVar_hi <- read_csv("tempLinVar_hi.csv") %>%
 
 ## Lin + Season + Variation ----
 
-LinVarSeason_n <- read_csv("tempLinVarSeason_n.csv") %>% 
+LinVarSeason_n <- read_csv("./Data4R/tempLinVarSeason_n.csv") %>% 
   mutate(fw = factor(fw)) %>% 
   mutate(temp = temp - 273.15) %>% 
   # fws = 25; 1000 =  50reps of 20 temps
   mutate(replicate = rep(1:25, each = 1000))
 
-LinVarSeason_lo <- read_csv("tempLinVarSeason_lo.csv") %>% 
+LinVarSeason_lo <- read_csv("./Data4R/tempLinVarSeason_lo.csv") %>% 
   mutate(fw = factor(fw)) %>% 
   mutate(temp = temp - 273.15) %>% 
   # fws = 25; 1000 =  50reps of 20 temps
   mutate(replicate = rep(1:25, each = 1000))
 
-LinVarSeason_hi <- read_csv("tempLinVarSeason_hi.csv") %>% 
+LinVarSeason_hi <- read_csv("./Data4R/tempLinVarSeason_hi.csv") %>% 
   mutate(fw = factor(fw)) %>% 
   mutate(temp = temp - 273.15) %>% 
   # fws = 25; 1000 =  50reps of 20 temps
@@ -84,16 +97,27 @@ LinVarSeason_hi <- read_csv("tempLinVarSeason_hi.csv") %>%
 
 
 ## Combine all without variation ----
-# each = 25fws*20times
+
+# each = 25fws*20 temp steps = 500
 df_novar <- bind_rows(Lin, Season10, Season25, Season40, LinSeason) %>% 
   mutate(tempSeq = rep(c("Lin",
                          "Season10", "Season25", "Season40",
                          "LinSeason"), 
                        each = 500))
 
-## Combine all with variation
+startCond_noVar <-tibble(fw = rep(factor(1:25),5), step = 0, temp = 10, 
+                         richness = 30, stability = NA, biomass = NA,
+                         tempSeq = rep(c("Lin","Season10", "Season25", 
+                                     "Season40","LinSeason"), each = 25))
 
-# summarise ------------------------------------------
+df_novar <- bind_rows(df_novar, startCond_noVar)
+
+# Narrow LinVars
+df_novar_narrowDT <- bind_rows(Lin_10_14, Lin_18_22, Lin_26_30) %>% 
+  mutate(DeltaT = rep(c("10-14", "18-22", "26-30"), 
+                      each = 500))
+
+### summarise without var ----
 
 # note use of step rather than temperature as x-axis
 # for linear it is 20 -> 40
@@ -121,40 +145,6 @@ sum_novar <- df_novar %>%
     seBiomass = 1.96*(sd(biomass)/sqrt(n()))
   )
 
-## summarise random var data to have single mean ----
-# for each of 25 webs (e.g. over the 50 randoms for each web)
-# or per random run (e.g. over the 25 webs)
-sum_var_n <- LinVar_n %>% 
-  # mean by web across reps to match no-vars
-  group_by(fw, step) %>% 
-  summarise(meanRichness = mean(richness),
-            meanBiomass = mean(biomass))
-
-sum_var_lo <- LinVar_lo %>% 
-  # mean by web across reps to match no-vars
-  group_by(fw, step) %>% 
-  summarise(meanRichness = mean(richness),
-            meanBiomass = mean(biomass))
-
-sum_var_hi <- LinVar_hi %>% 
-  # mean by web across reps to match no-vars
-  group_by(fw, step) %>% 
-  summarise(meanRichness = mean(richness),
-            meanBiomass = mean(biomass))
-
-
-sum_allLinVar <- bind_rows(sum_var_n,
-                           sum_var_lo,
-                           sum_var_hi) %>% 
-  tibble() %>% 
-  mutate(varType = rep(c("n","lo","hi"), each = 500))
-
-hyperSum_allLinVar <- sum_allLinVar %>% 
-  group_by(step) %>% 
-  summarise(hypermeanBiomass = mean(meanBiomass),
-            hyperseBiomass = 1.96*sd(meanBiomass)/sqrt(n()),
-            hypermeanRichness = mean(meanRichness),
-            hyperseRichness = 1.96*sd(meanRichness)/sqrt(n()))
 
 ## summarise random var+Season data to have single mean among 10 webs per random run ----
 sum_varSeason_n <- LinVarSeason_n %>% 
@@ -254,6 +244,38 @@ p4 <- ggplot(df_novar, aes(x = step, y = richness, col = fw))+
 #p4+p1
 
 p3/p4
+
+
+## Narrow Delta T plots ----
+startCond_NT <- bind_rows(
+  tibble(fw = factor(1:25), step = 0, temp = 10, richness = 30, 
+       stability = NA, biomass = NA, DeltaT = "10-14"),
+  tibble(fw = factor(1:25), step = 0, temp = 18, richness = 30, 
+       stability = NA, biomass = NA, DeltaT = "18-22"),
+  tibble(fw = factor(1:25), step = 0, temp = 26, richness = 30, 
+         stability = NA, biomass = NA, DeltaT = "26-30"))
+
+# add start conditions and Lin No Var
+Lin2 <- Lin %>% mutate(DeltaT = "10-40")
+df_novar_narrowDT2 <- bind_rows(Lin2, df_novar_narrowDT, startCond_NT) %>% 
+  mutate(DeltaT = fct_relevel(DeltaT, "10-40"))
+
+# summarise
+df_novar_narrowDT2_sum <- df_novar_narrowDT2 %>% 
+  group_by(DeltaT, temp) %>% 
+  summarise(meanRichness = mean(richness),
+            seRichness = 1.96*sd(richness)/sqrt(n()))
+
+p4.1 <- ggplot(df_novar_narrowDT2, aes(x = temp, y = richness, col = fw))+
+  geom_line(alpha = 0.3)+
+  geom_line(data = df_novar_narrowDT2_sum, aes(x = temp, y = meanRichness), col = 'black')+
+  geom_ribbon(data = df_novar_narrowDT2_sum, aes(x = temp, y = meanRichness,
+                                    ymax = meanRichness+seRichness,
+                                    ymin = meanRichness-seRichness), col = "grey80", alpha = 0.5)+
+  facet_wrap(~DeltaT, nrow = 1, scales = "free_x")+  # theming
+  theme_bw()+
+  theme(legend.position = "none")
+p4.1
 
 ## Temp Seq Plots with stoch, so each line is a unique set of randomness ----
 
