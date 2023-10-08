@@ -62,7 +62,10 @@ T_fix40 = 40
 # 20 steps from 10c to 40c.
 T_lin = collect(range(10, 40 , 20)) # 20 temperature steps
 
+# small scale delta Ts (all 4C change from different start points)
 T_lin_10_14 = collect(range(10, 14, 20))
+T_lin_18_22 = collect(range(18, 22, 20))
+T_lin_26_30 = collect(range(26, 30, 20))
 
 ## seasonal flip flops
 # need to do this at 10, 25 and 40 with ±1.5 to match T_lin_season
@@ -218,6 +221,10 @@ outSeason40 = simTemp(FWs, T_season3)
 
 # linear
 outLin = simTemp(FWs, T_lin)
+
+# linear smaller scale delta T
+outLin_10_14 = simTemp(FWs, T_lin_10_14)
+outLin_10_14 = simTemp(FWs, T_lin_10_14)
 outLin_10_14 = simTemp(FWs, T_lin_10_14)
 
 # linear with seasons
