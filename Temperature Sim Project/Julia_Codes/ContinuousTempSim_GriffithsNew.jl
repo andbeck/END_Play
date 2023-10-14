@@ -122,8 +122,11 @@ ll = trunc(Int, length(T_lin)/2)
 # generate cycle on linear increase
 # add 1.5 to start, than -3: generates 0.5c changes on line
 var_season = repeat([1.5, -3], ll)
+var_seasonLarge = repeat([3.5, -5], ll)
+
 # add seasonal to T
 T_lin_season = collect(T_lin) + var_season
+T_lin_seasonLarge = collect(T_lin) + var_seasonLarge
 
 ## Generate Linear + Variation
 # add randoms to T
@@ -233,6 +236,7 @@ outLin_26_30 = simTemp(FWs, T_lin_26_30)
 
 # linear with seasons
 outLinSeason = simTemp(FWs, T_lin_season)
+outLinSeasonLarge = simTemp(FWs, T_lin_seasonLarge)
 
 ## Linear with Variation (reps)
 
@@ -321,4 +325,5 @@ CSV.write("./Temperature Sim Project/Data4R/tempLinVarSeason_hi.csv", df_LVShi)
 ### Go to exlploreContTempData.R for figures and stats ####
 ###########################################################
 
-@df outSeasonLarge25 plot(:step, :biomass, group = :fw)
+@df outLinSeasonLarge plot(:step, :richness, 
+    group = :fw, legend = false)
