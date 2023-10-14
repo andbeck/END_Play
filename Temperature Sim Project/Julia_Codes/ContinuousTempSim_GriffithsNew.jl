@@ -40,7 +40,7 @@
 ######################
 
 using EcologicalNetworksDynamics
-using Random, DataFrames, Plots, CSV, Distributions
+using Random, DataFrames, Plots, CSV, Distributions, StatsPlots
 
 ###############################################################
 ## Include Function to loop over webs and temperature values ##
@@ -73,6 +73,9 @@ T_lin_26_30 = collect(range(26, 30, 20))
 T_season1 = repeat([10.5, 9.5], 10)
 T_season2 = repeat([25.5, 24.5], 10)
 T_season3 = repeat([40.5, 39.5], 10)
+
+# bigger cycles
+T_season4 = repeat([20.5, 28.5], 10)
 
 #########################
 ## sources of variation
@@ -218,6 +221,7 @@ out40 = simTemp(FWs, T_fix40)
 outSeason10 = simTemp(FWs, T_season1)
 outSeason25 = simTemp(FWs, T_season2)
 outSeason40 = simTemp(FWs, T_season3)
+outSeasonLarge25 = simTemp(FWs, T_season4)
 
 # linear
 outLin = simTemp(FWs, T_lin)
@@ -317,4 +321,4 @@ CSV.write("./Temperature Sim Project/Data4R/tempLinVarSeason_hi.csv", df_LVShi)
 ### Go to exlploreContTempData.R for figures and stats ####
 ###########################################################
 
-# @df outLin_10_14 plot(:step, :richness, group = :fw)
+@df outSeasonLarge25 plot(:step, :biomass, group = :fw)
