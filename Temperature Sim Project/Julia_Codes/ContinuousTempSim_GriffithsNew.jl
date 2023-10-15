@@ -328,10 +328,18 @@ CSV.write("./Temperature Sim Project/Data4R/tempLinVarSeason_hi.csv", df_LVShi)
 @df outLinSeasonLarge plot(:step, :richness, 
     group = :fw, legend = false)
 
-# ## multiple runs
-# # how do you use map or mapslices!!?
+# # multiple runs using map and eachcol
+
+# # set up matrix of scenarios on columms
 # test=[T_lin_season T_lin_seasonLarge]
-# outTest = mapslices(X -> simTemp(X, test), FWs, dims = (1))
+
+# # use map and eachcol; define col = column, map implicity to simTemp with
+# # first argument fixed (FWs) and second argument the columns
+# # evaluate function using eachcol of test matrix
+
+# hold = map(col -> simTemp(FWs, col), eachcol(test))
+
+## OR Looping
 
 # hold = []
 
