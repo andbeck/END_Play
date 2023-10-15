@@ -327,3 +327,14 @@ CSV.write("./Temperature Sim Project/Data4R/tempLinVarSeason_hi.csv", df_LVShi)
 
 @df outLinSeasonLarge plot(:step, :richness, 
     group = :fw, legend = false)
+
+# ## multiple runs
+# # how do you use map or mapslices!!?
+# test=[T_lin_season T_lin_seasonLarge]
+# outTest = mapslices(X -> simTemp(X, test), FWs, dims = (1))
+
+# hold = []
+
+# for i in 1:2
+#     push!(hold , simTemp(FWs, test[:,i]))
+# end
