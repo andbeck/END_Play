@@ -75,7 +75,7 @@ T_season2 = repeat([25.5, 24.5], 10)
 T_season3 = repeat([40.5, 39.5], 10)
 
 # bigger cycles
-T_season4 = repeat([20.5, 28.5], 10)
+T_season4 = repeat([21.5, 28.5], 10)
 
 #########################
 ## sources of variation
@@ -122,7 +122,7 @@ ll = trunc(Int, length(T_lin)/2)
 # generate cycle on linear increase
 # add 1.5 to start, than -3: generates 0.5c changes on line
 var_season = repeat([1.5, -3], ll)
-var_seasonLarge = repeat([3.5, -5], ll)
+var_seasonLarge = repeat([4.5, -6], ll)
 
 # add seasonal to T
 T_lin_season = collect(T_lin) + var_season
@@ -138,40 +138,57 @@ T_lin_varhighExt = T_lin .+ tvars_w # wide
 T_lin_season_varNorm = T_lin_season .+ tvars_superN
 T_lin_season_varloExt = T_lin_season .+ tvars_n
 T_lin_season_varhighExt= T_lin_season .+ tvars_w
+T_lin_seasonLarge_varNorm = T_lin_seasonLarge .+ tvars_superN
 
 #######################################
 ## Generate Experimental Design plot
 #######################################
 
 p1 = plot(1:1:20, T_lin, legend = false,
-    title = "L")
-p2 = plot(1:1:20, [T_season1, T_season2, T_season3],
-    title = "S", legend = false)
+    title = "L", titlefontsize = 10)
+p2 = plot(1:1:20, [T_season1, T_season2, T_season3, T_season4],
+    title = "S", legend = false, 
+    titlefontsize = 10)
 p3 = plot(1:1:20, T_lin_season, legend = false,
-    title = "L+S")
-# linear with variations
-p4 = plot(1:1:20, T_lin_varNorm, legend = false,
-    title = "L+V superLoExt", ylims = extrema(T_lin_season_varhighExt))
+    title = "L+S", titlefontsize = 10)
+p4 = plot(1:1:20, T_lin_seasonLarge, legend = false,
+    title = "L+S_large", titlefontsize = 10)
 
-p5 = plot(1:1:20, T_lin_varloExt, legend = false,
-    title = "L+V loExt", ylims = extrema(T_lin_season_varhighExt))
+    # linear with variations
+p5 = plot(1:1:20, T_lin_varNorm, legend = false,
+    title = "L+V superLoExt", ylims = extrema(T_lin_season_varhighExt),
+    titlefontsize = 10)
 
-p6 = plot(1:1:20, T_lin_varhighExt, legend = false,
-    title = "L+V hiExt", ylims = extrema(T_lin_season_varhighExt))
+p6 = plot(1:1:20, T_lin_varloExt, legend = false,
+    title = "L+V loExt", ylims = extrema(T_lin_season_varhighExt),
+    titlefontsize = 10)
+
+p7 = plot(1:1:20, T_lin_varhighExt, legend = false,
+    title = "L+V hiExt", ylims = extrema(T_lin_season_varhighExt),
+    titlefontsize = 10)
+
+p8 = plot(legend=false,grid=false,foreground_color_subplot=:white) 
 
 # linear with season and variations
-p7 = plot(1:1:20, T_lin_season_varNorm, legend = false,
-    title = "L+V+S superLoExt", ylims = extrema(T_lin_season_varhighExt))
+p9 = plot(1:1:20, T_lin_season_varNorm, legend = false,
+    title = "L+V+S superLoExt", ylims = extrema(T_lin_season_varhighExt),
+    titlefontsize = 10)
 
-p8 = plot(1:1:20, T_lin_season_varloExt, legend = false,
-    title = "L+V+S loExt", ylims = extrema(T_lin_season_varhighExt))
+p10 = plot(1:1:20, T_lin_season_varloExt, legend = false,
+    title = "L+V+S loExt", ylims = extrema(T_lin_season_varhighExt),
+    titlefontsize = 10)
 
-p9 = plot(1:1:20, T_lin_season_varhighExt, legend = false,
-    title = "L+V+S hiExt", ylims = extrema(T_lin_season_varhighExt))
+p11 = plot(1:1:20, T_lin_season_varhighExt, legend = false,
+    title = "L+V+S hiExt", ylims = extrema(T_lin_season_varhighExt),
+    titlefontsize = 10)
 
-plot(p1, p2, p3, 
-    p4, p5, p6,
-    p7, p8, p9, layout = (3,3))
+p12 = plot(1:1:20, T_lin_seasonLarge_varNorm, legend = false,
+    title = "L+V+S_large norm", ylims = extrema(T_lin_season_varhighExt),
+    titlefontsize = 10)
+
+plot(p1, p2, p3, p4, 
+    p5, p6, p7, p8,
+    p9, p10, p11, p12, layout = (3,4))
 
 
 ######################
@@ -266,6 +283,13 @@ for i in 1:size(T_lin_season_varNorm, 2)
     push!(df_vector_LVS_n, simTemp(FWs, T_lin_season_varNorm[:,i]))
 end
 
+# narrow var with large season
+df_vector_LVS_large_n = Any[]
+for i in 1:size(T_lin_seasonLarge_varNorm, 2)
+    push!(df_vector_LVS_large_n, simTemp(FWs, T_lin_seasonLarge_varNorm[:,i]))
+end
+
+
 # wider variation
 df_vector_LVS_lo = Any[]
 for i in 1:size(T_lin_season_varloExt, 2)
@@ -289,6 +313,7 @@ CSV.write("./Temperature Sim Project/Data4R/temp40Cons.csv", out40)
 CSV.write("./Temperature Sim Project/Data4R/tempSeason10.csv", outSeason10)
 CSV.write("./Temperature Sim Project/Data4R/tempSeason25.csv", outSeason25)
 CSV.write("./Temperature Sim Project/Data4R/tempSeason40.csv", outSeason40)
+CSV.write("./Temperature Sim Project/Data4R/tempSeason25_large.csv", outSeasonLarge25)
 
 # linear
 CSV.write("./Temperature Sim Project/Data4R/tempLinRun.csv", outLin)
@@ -300,6 +325,7 @@ CSV.write("./Temperature Sim Project/Data4R/tempLinRun_26_30.csv", outLin_26_30)
 
 # linear with season
 CSV.write("./Temperature Sim Project/Data4R/tempLinSeason.csv", outLinSeason)
+CSV.write("./Temperature Sim Project/Data4R/tempLinSeason_large.csv", outLinSeasonLarge)
 
 # linear with variation
 # requires stacking matrix of 50 random changes using reduce and vcat
@@ -316,10 +342,13 @@ CSV.write("./Temperature Sim Project/Data4R/tempLinVar_hi.csv", df_LVhi)
 df_LVSn = reduce(vcat,df_vector_LVS_n)
 df_LVSlo = reduce(vcat,df_vector_LVS_lo)
 df_LVShi = reduce(vcat,df_vector_LVS_hi)
+df_LVSlargen = reduce(vcat,df_vector_LVS_large_n)
 
 CSV.write("./Temperature Sim Project/Data4R/tempLinVarSeason_n.csv", df_LVSn)
 CSV.write("./Temperature Sim Project/Data4R/tempLinVarSeason_lo.csv", df_LVSlo)
 CSV.write("./Temperature Sim Project/Data4R/tempLinVarSeason_hi.csv", df_LVShi)
+CSV.write("./Temperature Sim Project/Data4R/tempLinVarSeason_large_n.csv", df_LVSlargen)
+
 
 ###########################################################
 ### Go to exlploreContTempData.R for figures and stats ####
@@ -328,10 +357,10 @@ CSV.write("./Temperature Sim Project/Data4R/tempLinVarSeason_hi.csv", df_LVShi)
 @df outLinSeasonLarge plot(:step, :richness, 
     group = :fw, legend = false)
 
-# # multiple runs using map and eachcol
+# multiple runs using map and eachcol
 
-# # set up matrix of scenarios on columms
-# test=[T_lin_season T_lin_seasonLarge]
+# set up matrix of scenarios on columms
+test=[T_season4 T_lin_seasonLarge]
 
 # # use map and eachcol; define col = column, map implicity to simTemp with
 # # first argument fixed (FWs) and second argument the columns
@@ -339,10 +368,10 @@ CSV.write("./Temperature Sim Project/Data4R/tempLinVarSeason_hi.csv", df_LVShi)
 
 # hold = map(col -> simTemp(FWs, col), eachcol(test))
 
-## OR Looping
+# OR Looping
 
-# hold = []
+hold = []
 
-# for i in 1:2
-#     push!(hold , simTemp(FWs, test[:,i]))
-# end
+for i in 1:2
+    push!(hold , simTemp(FWs, test[:,i]))
+end
