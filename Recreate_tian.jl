@@ -1,26 +1,25 @@
 ## Recreate Tians paper using their body sizes
 
-## Packages
-# Install
-Pkg.activate(".")
-Pkg.add("Plots")
-Pkg.add("Statistics")
-Pkg.add("Random")
-Pkg.add("Distributions")
-Pkg.add("StatsBase")
-Pkg.add("StatsPlots")
-Pkg.add("DifferentialEquations")
-Pkg.add("CSV")
-Pkg.add("DataFrames")
-Pkg.add("DelimitedFiles")
-Pkg.add("EcologicalNetworks")
-Pkg.add("EcologicalNetworksPlots")
+# ## Packages
+# # Install
+# Pkg.activate(".")
+# Pkg.add("Plots")
+# Pkg.add("Statistics")
+# Pkg.add("Random")
+# Pkg.add("Distributions")
+# Pkg.add("StatsBase")
+# Pkg.add("StatsPlots")
+# Pkg.add("DifferentialEquations")
+# Pkg.add("CSV")
+# Pkg.add("DataFrames")
+# Pkg.add("DelimitedFiles")
+# Pkg.add("EcologicalNetworks")
+# Pkg.add("EcologicalNetworksPlots")
 
 # Packages
 using DataFrames, Plots, Random, Distributions
-using EcologicalNetworks, EcologicalNetworksPlots, EcologicalNetworksDynamics
-using LinearAlgebra, EcologicalNetworksDynamics
-
+using EcologicalNetworksDynamics
+using LinearAlgebra
 # set the seed
 Random.seed!(12325)
 
@@ -88,5 +87,19 @@ function cascade_model_alina(C; mprod = [2, 5], minvert=[4, 6, 7, 8])
 end
 
 fw = cascade_model_alina(.2; mprod = [1, 10], minvert = [5, 8, 15])
-# Check the final connectance
-sum(fw.A) / ((richness(fw) - 1) * richness(fw)) ## all good
+# # Check the final connectance
+# sum(fw.A) / ((richness(fw) - 1) * richness(fw)) ## all good
+
+# use the FoodWeb
+
+# Setting biomass of 18 species (random)
+B0 = rand(5)
+
+# Setting model parameters
+params = ModelParameters(fw)
+
+# Burn in
+out = simulate(params, B0)
+
+# visualise
+plot(out) # good = equilib
