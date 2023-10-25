@@ -33,6 +33,11 @@
 ## NOTES ###############################
 # What to do about disconnected species
 # Better to do 4c changes from 12, 18, 25c?
+# Create Small Temp Change with Big Cycles?
+# What does small temp change mean vs. large temp change
+# 0-40 or 0-20;20-40 are ranges within which organisms live
+# 4C change is the average prediction for the planet
+# how does RPC4 and 8 variation look (perhaps this is the key question)
 ########################################
 
 ######################
