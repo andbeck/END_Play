@@ -11,7 +11,10 @@ import Random.seed!
 # vectors of variables
 T_range = 0:2:40
 K_range = [1,10]
-n_rep = 10
+
+n_rep = 30
+
+
 T_values = 273.15 .+ collect(T_range) # temperature 1-40C
 K_int_values = collect(K_range) # intercept of the carrying capacity (eutrophication)
 n_T, n_K = length(T_range), length(K_range)
@@ -19,7 +22,7 @@ n_T, n_K = length(T_range), length(K_range)
 # basal species starting biomass
 m0 = 0.01
 
-# make 10 food web using niche model and Z value 100
+# make nrep food web using niche model and Z value 100
 seed!(22)
 FWs = []
 for _ in 1:n_rep
