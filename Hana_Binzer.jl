@@ -10,7 +10,7 @@ import Random.seed!
 
 # vectors of variables
 T_range = 0:2:40
-K_range = 1.:1:20
+K_range = [1,10]
 n_rep = 10
 T_values = 273.15 .+ collect(T_range) # temperature 1-40C
 K_int_values = collect(K_range) # intercept of the carrying capacity (eutrophication)
@@ -57,10 +57,10 @@ Threads.@threads for i_K in 1:n_K
            # foodweb.M
 
             # set initial biomasses
-            B0 = zeros(richness(foodweb))
+            B0 = zeros(EcologicalNetworksDynamics.richness(foodweb))
             K_prod = unique(p.producer_growth.K[.!isnothing.(p.producer_growth.K)])
             B0[producers(foodweb)] .= K_prod
-            B0[1:richness(foodweb) .∉ [producers(foodweb)]] .= K_prod / 8
+            B0[1:EcologicalNetworksDynamics.richness(foodweb) .∉ [producers(foodweb)]] .= K_prod / 8
 
             # simulate biomass dynamics for 1000 years
             out = simulate(p, B0 , tmax = 31536000000,
@@ -88,4 +88,4 @@ Threads.@threads for i_K in 1:n_K
 end
 
 df
-CSV.write("Binzer_2016_Z10_finer.csv", df)
+CSV.write("Binzer_2016_Z10_coarseK.csv", df)
