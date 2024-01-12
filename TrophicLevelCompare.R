@@ -87,9 +87,8 @@ TLlurgi <- TrophicPositions(t(WebJulia))[[1]]
 
 TLatn <- TroLev(t(WebJulia))
 
-
-cbind(TLlurgi, TLatn)
-cbind(TLeva$TL, TLatn)
+# cbind(TLlurgi, TLatn)
+# cbind(TLeva$TL, TLatn)
 
 # Julia Processed Data ====
 
