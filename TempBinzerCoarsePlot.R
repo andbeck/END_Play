@@ -23,12 +23,13 @@ p0 <- ggplot(basic, aes(x = temp-273.15, y = meanPersistence,
   geom_line()+
   labs(x = "Temperature (C)", y = "Mean Persistence (n = 10)", 
        col = "K",
-       title = "Temperature x K interaction (n = 30 webs)")+
+       title = "Temperature x K interaction (n = 30 webs; C = 0.1, Z = 10)")+
   geom_errorbar(aes(ymin = meanPersistence - sePersistence,
                     ymax = meanPersistence + sePersistence), alpha = 0.5)+
   theme_bw(base_size = 15)
 
 p0
+
 ## ----------
 
 p1 <- ggplot(df10, aes(x = eutrophication, y = temp, fill = persistence))+
