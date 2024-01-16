@@ -8,9 +8,11 @@ df100_2 <-read_csv("Binzer_2016_z100_finer.csv")
 
 df10_2K <- read_csv("Binzer_2016_z10_coarseK.csv")
 
+df100_apb <- read_csv("Binzer_2016_z100_APBAgain.csv")
+
 col = rev(RColorBrewer::brewer.pal(9, "Greens"))
 
-basic <- df10_2K %>% 
+basic <- df100_apb %>% 
   group_by(temp, eutrophication) %>% 
   summarise(
     meanPersistence = mean(persistence),
@@ -29,6 +31,12 @@ p0 <- ggplot(basic, aes(x = temp-273.15, y = meanPersistence,
   theme_bw(base_size = 15)
 
 p0
+
+ggplot(basic, aes(x = eutrophication, y = temp-273.15, z = meanPersistence, fill = meanPersistence))+
+  geom_tile()+
+  geom_contour()+
+  ggtitle("100")+
+  scale_fill_gradientn(colours = col)
 
 ## ----------
 
