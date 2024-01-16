@@ -10,9 +10,9 @@ import Random.seed!
 
 # vectors of variables
 T_range = 0:2:40
-K_range = [1,10]
+K_range = 1:1:20
 
-n_rep = 30
+n_rep =5
 
 
 T_values = 273.15 .+ collect(T_range) # temperature 1-40C
@@ -26,7 +26,7 @@ m0 = 0.01
 seed!(22)
 FWs = []
 for _ in 1:n_rep
-    fw = FoodWeb(nichemodel, 30; C=0.1, Z=10)
+    fw = FoodWeb(nichemodel, 30; C=0.1, Z=100)
     fw.M *= m0
     push!(FWs, fw)
 end
@@ -91,4 +91,4 @@ Threads.@threads for i_K in 1:n_K
 end
 
 df
-CSV.write("Binzer_2016_Z10_coarseK.csv", df)
+CSV.write("Binzer_2016_Z10_APBAgain.csv", df)
