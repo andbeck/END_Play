@@ -6,14 +6,15 @@ using EcologicalNetworksDynamics # import package
 using Plots
 using DataFrames
 using CSV
+using Distributions
 import Random.seed!
 
+
 # vectors of variables
-T_range = 0:2:40
+T_range = 0:1:40
 K_range = 1:1:20
 
-n_rep =5
-
+n_rep = 30
 
 T_values = 273.15 .+ collect(T_range) # temperature 1-40C
 K_int_values = collect(K_range) # intercept of the carrying capacity (eutrophication)
@@ -24,13 +25,39 @@ m0 = 0.01
 
 # make nrep food web using niche model and Z value 100
 seed!(22)
-FWs = []
+
+# define variation in species Masses
+mu = 0
+sd = 0.01
+d = Normal(mu, sd)
+randM = rand(d, n_rep)
+
+FWs_nb = []
+FWs_b = []
+
+# non-binzer error vals
+seed!(22)
 for _ in 1:n_rep
-    fw = FoodWeb(nichemodel, 30; C=0.1, Z=100)
-    fw.M *= m0
-    push!(FWs, fw)
+    #fw_nb = FoodWeb(nichemodel, 30; C=0.1, Z=100)
+    fw_nb = FoodWeb(nichemodel, 30; C=0.1, Z=100, check_disconnected = true, check_cycle = true)
+    fw_nb.M *= m0
+    push!(FWs_nb, fw_nb)
 end
 
+# Binzer error vals
+seed!(22)
+for _ in 1:n_rep
+    #fw_b = FoodWeb(nichemodel, 30; C=0.1, Z=100)
+    fw_b = FoodWeb(nichemodel, 30; C=0.1, Z=100, check_disconnected = true, check_cycle = true)
+    fw_b.M = m0 * 100 .^ (trophic_levels(fw_b) .- 1 + randM)
+    push!(FWs_b, fw_b)
+end
+
+
+# test Mass variation
+# species in same trophic levels don't have == mass
+DataFrame(M_nb = FWs_nb[1].M,  TL_nb = trophic_levels(FWs_nb[1]),
+            M_binz = FWs_b[1].M, TL_binz = trophic_levels(FWs_b[1]))
 
 # dataframe to store results
 n_lines = n_T * n_K * n_rep
@@ -41,7 +68,6 @@ df = DataFrame(eutrophication=zeros(n_lines), temp=zeros(n_lines), repeat=zeros(
 
 Threads.@threads for i_K in 1:n_K
     K_int = K_int_values[i_K]
-
     # varying temperature
     for (i_T, T) in enumerate(T_values)
 
@@ -50,14 +76,16 @@ Threads.@threads for i_K in 1:n_K
 
             println("K_int = $K_int", " T = $T", " rep = $i_rep")
 
-
             #generate model parameters
-            p = ModelParameters(foodweb, functional_response=ClassicResponse(foodweb, h=1.2), biorates=BioRates(foodweb; d=0))
+            # sets K = 1 for all producers
+            p = ModelParameters(foodweb, functional_response=ClassicResponse(foodweb, h=1.2),
+                biorates=BioRates(foodweb; d=0))
 
-            # set temperature
+            # set temperature and intercept of K according to Binzer
+            # "eutrophication (varying the intercept of the carrying capacity, d, between 1 and 20 in steps of 1
+            # to manipulate the energy input into the food webs)
+            # applies intecept and exponents for K, r, a, h and x
             set_temperature!(p, T, ExponentialBA(K = exp_ba_carrying_capacity(aₚ = K_int)))
-           # K = p.environment.K
-           # foodweb.M
 
             # set initial biomasses
             B0 = zeros(EcologicalNetworksDynamics.richness(foodweb))
@@ -91,4 +119,4 @@ Threads.@threads for i_K in 1:n_K
 end
 
 df
-CSV.write("Binzer_2016_Z100_APBAgain.csv", df)
+CSV.write("Binzer_2016_Z100_ExpBASimple.csv", df)
