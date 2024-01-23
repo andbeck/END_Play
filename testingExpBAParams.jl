@@ -8,7 +8,7 @@ using DataFrames
 using CSV
 using Distributions
 using Statistics
-using CairoMakie
+#using CairoMakie
 using StatsPlots
 import Random.seed!
 
@@ -17,11 +17,12 @@ import Random.seed!
 T_range = 0:1:40
 K_range = 1:1:20
 
-n_rep = 2
-
+# T and K values for assessment
 T_values = 273.15 .+ collect(T_range) # temperature 1-40C
 K_int_values = collect(K_range) # intercept of the carrying capacity (eutrophication)
-n_T, n_K = length(T_range), length(K_range)
+
+## Food Web Setup ---------------------
+n_rep = 1 # number of webs to make (1 for this assessment)
 
 # basal species starting biomass
 m0 = 0.01
@@ -34,38 +35,21 @@ con = 0.1
 # make nrep food web using niche model and Z value 100
 seed!(22)
 
-# define variation in species Masses
-mu = 0
-sd = 0.01
-d = Normal(mu, sd)
-randM = rand(d, websize)
-
 FWs_nb = []
-FWs_b = []
 
 # Food Webs with non-binzer error vals
 seed!(22)
 for _ in 1:n_rep
-    #fw_nb = FoodWeb(nichemodel, 30; C=0.1, Z=ppmr)
     fw_nb = FoodWeb(nichemodel, 30; C=0.1, Z=ppmr, check_disconnected = true, check_cycle = true)
     fw_nb.M *= m0
     push!(FWs_nb, fw_nb)
 end
 
-# Food Webs with Binzer error vals
-seed!(22)
-for _ in 1:n_rep
-    #fw_b = FoodWeb(nichemodel, 30; C=0.1, Z=ppmr)
-    fw_b = FoodWeb(nichemodel, 30; C=0.1, Z=ppmr, check_disconnected = true, check_cycle = true)
-    fw_b.M = m0 * 100 .^ (trophic_levels(fw_b) .- 1 + randM)
-    push!(FWs_b, fw_b)
-end
-
-## Some testing.
+## The testing ---------------
 
 # K vs K_val (the intercept replacement value)
 
-foodweb = FWs_b[1]
+foodweb = FWs_nb[1]
 Tdefault = 293.15
 Kdefault = 3
 meanK_K = []
@@ -86,11 +70,8 @@ for (i_K, K) in enumerate(K_int_values)
     rr = filter!(x->x!=0, p.biorates.r)
     xx = filter!(x->x!=0, p.biorates.x)
     yy = filter!(x->x!=0, p.biorates.y)
-    
 
-    # average K
-
-    push!(meanK_K,mean(kk))
+    # push data to storage
     push!(storeK, [K, mean(kk), mean(rr), mean(xx), mean(yy)])
 end
 
@@ -107,9 +88,7 @@ for (i_T, T) in enumerate(T_values)
      xx = filter!(x->x!=0, p.biorates.x)
      yy = filter!(x->x!=0, p.biorates.y)
 
-     # average K
-
-     push!(meanK_T,mean(kk))
+    # push data to storage
      push!(storeT, [T - 273.15, mean(kk), mean(rr), mean(xx), mean(yy)])
 
  end
@@ -121,28 +100,31 @@ storeT
 
 ## T diagnotstics
 # should be negative expo (check!)
-@df storeT StatsPlots.plot(:T, [:meanK])
+p1 = @df storeT StatsPlots.plot(:T, [:meanK], title = "Neg Expo (Y)", xlabel = "T", ylabel = "K" )
 
 # should be positive expo (check!)
-@df storeT StatsPlots.plot(:T, [:meanr])
+p2 = @df storeT StatsPlots.plot(:T, [:meanr], title = "Pos Expo (Y)", xlabel = "T", ylabel = "r")
 
 # should be negative (FAIL)
-@df storeT StatsPlots.plot(:T, [:meanx])
+p3 = @df storeT StatsPlots.plot(:T, [:meanx], title = "neg 'lin' (FAIL)", xlabel = "T", ylabel = "x")
 
 # should be negative? (FAIL)
-@df storeT StatsPlots.plot(:T, [:meany])
+p4 = @df storeT StatsPlots.plot(:T, [:meany],title = "neg 'lin' (FAIL)", xlabel = "T", ylabel = "y")
+
+plot(p1,p2,p3,p4, layout =(2,2))
 
 # K diagnotstics
 
 # should be positive linear (check!)
-@df storeK StatsPlots.plot(:K, [:meanK])
+p5 = @df storeK StatsPlots.plot(:K, [:meanK], title = "Pos Linear (Y)", xlabel = "k_intercept", ylabel = "K")
 
 # should be constant (check!)
-@df storeK StatsPlots.plot(:K, [:meanr])
+p6 = @df storeK StatsPlots.plot(:K, [:meanr], title = "Constant (Y)", xlabel = "k_intercept", ylabel = "K")
 
 # should be constant (check!)
-@df storeK StatsPlots.plot(:K, [:meanx])
+p7 = @df storeK StatsPlots.plot(:K, [:meanx], title = "Constant (Y)", xlabel = "k_intercept", ylabel = "K")
 
 # should be constant (check!)
-@df storeK StatsPlots.plot(:K, [:meany])
+p8 = @df storeK StatsPlots.plot(:K, [:meany], title = "Constant (Y)", xlabel = "k_intercept", ylabel = "K")
 
+plot(p5,p6,p7,p8, layout =(2,2))
