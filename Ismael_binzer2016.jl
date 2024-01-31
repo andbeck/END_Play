@@ -9,10 +9,10 @@ using Distributions
 using EcologicalNetworksDynamics
 using Statistics
 
-n_cells = 10
+n_cells = 20
 T_values = 273.15 .+ LinRange(0, 40, n_cells)
 K_values = LinRange(1, 20, n_cells)
-n_fw = 100 # Number of food web replicates.
+n_fw = 5 # Number of food web replicates.
 initial_richness = 30
 Z = 100 # Predator-prey mass ratio.
 C = 0.1
@@ -83,6 +83,15 @@ end
 
 processed_data = combine(groupby(df, [:eutrophication, :temperature]), :persistence => mean)
 
+# make plot
+fig = Figure()
+ax = Axis(fig[1, 1])
+pp = CairoMakie.heatmap!(ax, processed_data[!,:eutrophication], 
+                            processed_data[!,:temperature], 
+                            processed_data[!,:persistence_mean])
+Colorbar(fig[1,2], pp)
+fig
+
 # Plot heatmap.
 with_theme() do
     colormap = Reverse(:algae)
@@ -97,5 +106,7 @@ with_theme() do
         # colorrange = (0, 1),
     )
     # Colorbar(fig[1, 2]; limits = (0, 1), label = "Persistence", colormap)
-    save("/tmp/plot.png", fig)
+    #save("/tmp/plot.png", fig)
+    hm
 end
+hm
