@@ -75,7 +75,8 @@ plot(out_init, c = :grey50, leg = false,
     xlims=(0, out_init.t[end]+out_next.t[end]))
 
 # now add the second sim, starting at the end of the burn-in
-# note that it is a 
+# note that it is an apostrophe after out_next, it is not a typo.
+
 plot!(out_next.t .+ out_init.t[end], 
-    out_next')
+    out_next') n
     
