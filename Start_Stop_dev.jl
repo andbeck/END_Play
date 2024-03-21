@@ -1,41 +1,57 @@
 using EcologicalNetworksDynamics, Plots, Random
-
-Random.seed!(123)
+using DataFrames
 
 #### The INITIALISATION ####
 
-# first create a food web of 20 species
-# 5% connectance and PPMR of 10x
-foodweb = FoodWeb(nichemodel, 20, C = 0.05, Z = 10)
+# # first create a food web of 20 species
+# # 5% connectance and PPMR of 10x
+# foodweb = FoodWeb(nichemodel, 20, C = 0.05, Z = 10)
 
+foodweb = FoodWeb(
+[6 => [1,2,3,4,5],
+7 => [1,2,3,4,5,6],
+8 => [1,2,3,4,5,6],
+9 => [1,2,3,4,5],
+10 => [1,2,3,4,5,6],
+11 => [1,2,3,4,5,6],
+12 => [1,2,3,4,5,6],
+13 => [7,8,9,10,11,12],
+14 => [6,7,8,9,10,11,12],
+15 => [7,8,9,10,11,12,13,14]], Z = 10)
+
+#randomise starter
+Random.seed!(123)
+
+# INTIAL SETUP
 # set the biomasses of the 20 species
-B0 = rand(20)
+# parrot is 12?
+B0 = rand(15)
 
 # set up the model parameters
 # could do more here with the functional response etc
 params = ModelParameters(foodweb)
 
-#### The BURN IN PHASE ####
 
-# create BURN IN PHASE
-out_init = simulate(params, B0, verbose = false)
+## Collection Zone - set up data frame to collect richness, biomass and stability
+df = DataFrame(richness = [], biomass = [], stability = [], Sp12_Biomass = [])
 
-# Could do some processing to find out what the community looks like and behaved like
+## Looping
 
-# Note the extinctions that happend
-get_extinct_species(out_init)
+for i in 1:10
 
-cv_burn = coefficient_of_variation(out_init)
-rich_burn = richness(out_init)
-ts_burn = trophic_structure(out_init).alive_A
-tc_burn = trophic_classes(ts_burn)
+    # simulate -> i = 1 is burn-in
+    out = simulate(params, B0, verbose = false)
 
-#############################################
-### identify extinctions in prep for i+1 ####
-#############################################
+    # collect data for each cycle
+    push!(df, [richness(out), biomass(out).total, coefficient_of_variation(out).community,
+        B0[12]])
+
+    #############################################
+    ### identify extinctions in prep for i+1 ####
+    #############################################
 
     # who is extinct
-    who_extinct = keys(get_extinct_species(out_init))
+    who_extinct = keys(get_extinct_species(out))
 
     # a list of 1:n species in current network
     species = 1:size(foodweb.A, 1)
@@ -47,36 +63,46 @@ tc_burn = trophic_classes(ts_burn)
         species_idx = 1:size(foodweb.A, 1)
     end
 
-    species_idx
-######################################
-## Update foodweb, B0 and p for t+1 ##
-######################################
+
+    @info "Iteration number: $i"
+    @info "Extinction: $who_extinct"
+    B12 = B0[12]
+    @info "Biomass Sp 12: $B12"
+
+    ######################################
+    ## Update foodweb, B0 and p for t+1 ##
+    ######################################
 
     # subset the matrix
     foodweb = FoodWeb(foodweb.A[species_idx, species_idx])
 
     # subset and collect the biomass (last value approach vs. mean?)
     # whether the mean or the last value is taken doesn't seem to matter
-    B0 = biomass(out_init, last = 1).species[species_idx]
+    B0 = biomass(out, last = 1).species[species_idx]
 
-    ## COULD DEFINE NEW VALUES OF B0 here... e.g. harvesting of a species. ###
+    #### reduce 12th species biomass by 10% ####
+    #### doesn't actually work, as species 12 is not the same after extinctions
+    #### how would you manage this?
+
+    B0[12] = B0[12]*0.90
 
     # reset the params and bodymass vector with subsetted bodymass
-    p = ModelParameters(foodweb)
+    params = ModelParameters(foodweb)
+end
 
-    out_next = simulate(p, B0, tmax = 2000, verbose = false)
+# see the data
+df
+df[!,:Sp12_Biomass]
 
 # plotting
-# note we have out_init and out_next
+step = 1:10
+a = plot(step, df[!,:Sp12_Biomass])
+title!("Species12")
+b = plot(step, df[!,:biomass])
+title!("Biomass")
+c = plot(step, df[!,:stability])
+title!("Stability")
+d = plot(step, df[!,:richness])
+title!("Richness")
 
-# first plot the burnin (out_init), but set the x limits to max of 
-# the first + second simulation (out_next)
-plot(out_init, c = :grey50, leg = false, 
-    xlims=(0, out_init.t[end]+out_next.t[end]))
-
-# now add the second sim, starting at the end of the burn-in
-# note that it is an apostrophe after out_next, it is not a typo.
-
-plot!(out_next.t .+ out_init.t[end], 
-    out_next') n
-    
+plot(a,b,c,d, layout=(2,2))
