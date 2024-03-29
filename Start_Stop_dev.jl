@@ -35,13 +35,26 @@ B0 = rand(15)
 # (e.g. default is a type 3 functional response, which is very stable)
 # (what happens when it's a type 2 and less stable)
 
-params = ModelParameters(foodweb)
+# define the hill exponent for Type II (1.2) or III (2)
+fr = BioenergeticResponse(foodweb, h = 1)
+# use new fr
+params = ModelParameters(foodweb, functional_response = fr)
+
+## quick check to see dynamics associated with happens
+## h = 1.2 more variable
+
+# sim_test = simulate(params, B0, verbose = false)
+# plot(sim_test)
 
 ## Collection Zone - set up data frame to collect richness, biomass and stability
 df = DataFrame(richness = [], biomass = [], stability = [], Sp8_Biomass = [])
 
 # collect all species biomasses at end of each simulation
 all_biomass = Any[]
+
+# harvest rate sequence
+harvest = repeat([0.5], 10)
+# harvest = [0.9,0.8,0.7,0.6,0.3,0.3,0.6,0.7,0.8,0.9]
 
 ## Looping
 
@@ -56,10 +69,16 @@ for i in 1:10
     # simulate
     out = simulate(params, B0, verbose = false)
 
+    # just some information during the simulations
+    B8_end = biomass(out, last = 1).species[8]
+    @info "Biomass Sp 8 end: $B8_end"
+
+    rich = size(trophic_structure(out, last = 1).alive_species)[1]
+
     # collect data for each cycle
-    push!(df, [richness(out), biomass(out).total, coefficient_of_variation(out).community,
-        B0[8]])
-    push!(all_biomass, B0)
+    push!(df, [rich, biomass(out).total, coefficient_of_variation(out).community,
+        biomass(out, last = 1).species[8]])
+    push!(all_biomass, biomass(out, last = 1).species)
 
     ######################################
     ## NEW: Update Food Web with Zero's for extinct species
@@ -79,13 +98,12 @@ for i in 1:10
     # any that are extinct are assigned a 0.
     B0[alive_species] = biomass(out, last = 1).species[alive_species]
 
-    # just some information during the simulations
-    B8_end = B0[8]
-    @info "Biomass Sp 8 end: $B8_end"
+    # harvest parrot at x%
+    B0[8] = biomass(out, last = 1).species[8]*harvest[i]
 
-
-    # harvest parrot at 10%
-    B0[8] = B0[8]*0.9
+    # harvest other at x%
+    # B0[3] = biomass(out, last = 1).species[3]*harvest[i]
+    # B0 = B0*harvest[i]
 
     # just some information during the simulations
     B8_harvest = B0[8]
@@ -120,16 +138,17 @@ mat
 #DataFrame(mapreduce(permutedims, vcat, all_biomass[:,:]), :auto)
 
 # plotting
-step = 1:10
-a = plot(step, df[!,:Sp8_Biomass])
+time = 1:10
+a = plot(time, df[!,:Sp8_Biomass])
 title!("Species8")
-b = plot(step, df[!,:biomass])
+b = plot(time, df[!,:biomass])
 title!("Biomass")
-c = plot(step, df[!,:stability])
+c = plot(time, df[!,:stability])
 title!("Stability")
-d = plot(step, df[!,:richness])
+d = plot(time, df[!,:richness])
 title!("Richness")
-e = plot(step, mat, legend = false)
+e = plot(time, mat, legend = false)
 title!("All Species ~ Time")
 
 plot(a,b,c,d,e, layout=(2,3))
+
